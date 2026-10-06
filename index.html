@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#121212">
 <meta name="description" content="Mundo de Ofertas v4.0 - Marketplace com Supabase Auth, Perfis e Banco em Tempo Real">
 <meta name="mobile-web-app-capable" content="yes">
@@ -998,6 +998,76 @@ textarea.form-control { resize:vertical; min-height:70px; }
     .toast {
         min-width: 100%;
     }
+/* ================================================================
+   IMAGE ZOOM LIGHTBOX (FULLSCREEN INTERATIVO)
+================================================================ */
+.img-zoom-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 3500;
+    background: rgba(0, 0, 0, 0.94);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    touch-action: none;
+}
+.img-zoom-lightbox.open {
+    display: flex;
+}
+.img-zoom-lightbox img {
+    max-width: 92vw;
+    max-height: 82vh;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.6);
+    transition: transform 0.2s cubic-bezier(0.2, 0, 0.2, 1);
+    cursor: zoom-in;
+    user-select: none;
+}
+.img-zoom-lightbox.zoomed img {
+    cursor: zoom-out;
+    transform: scale(2.2);
+}
+.btn-close-zoom {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-size: 20px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 3600;
+    transition: background 0.2s;
+}
+.btn-close-zoom:hover {
+    background: rgba(255, 255, 255, 0.4);
+}
+.zoom-hint {
+    position: absolute;
+    bottom: 24px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+    font-weight: 600;
+    pointer-events: none;
+    background: rgba(0,0,0,0.4);
+    padding: 6px 14px;
+    border-radius: 20px;
+}
+.detail-img {
+    cursor: zoom-in;
+    transition: opacity 0.2s;
+}
+.detail-img:hover {
+    opacity: 0.95;
 }
 </style>
 </head>
@@ -1406,6 +1476,15 @@ textarea.form-control { resize:vertical; min-height:70px; }
 <div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
 <!-- TOASTS -->
 <div class="toast-container" id="toastContainer"></div>
+
+<!-- ===================================================
+     MODAL: ZOOM NA IMAGEM (LIGHTBOX INTERATIVO)
+=================================================== -->
+<div class="img-zoom-lightbox" id="imgZoomLightbox" onclick="toggleLightboxZoom(event)">
+    <button class="btn-close-zoom" onclick="closeImgZoom(event)" aria-label="Fechar">✕</button>
+    <img id="lightboxImg" alt="Imagem ampliada" src="">
+    <div class="zoom-hint">Toque para aproximar / afastar</div>
+</div>
 
 <!-- ===================================================
      JAVASCRIPT
@@ -1982,8 +2061,10 @@ function openDetail(id) {
     const p = produtos.find(x => String(x.id) === produtoAtualId);
     if (!p) return;
 
-    document.getElementById("detailTitle").textContent    = p.nome;
-    document.getElementById("detailImg").src              = imgUrl(p.imagem);
+    const dImg = document.getElementById("detailImg");
+    dImg.src = imgUrl(p.imagem);
+    dImg.onclick = () => openImgZoom(imgUrl(p.imagem));
+
     document.getElementById("detailRating").textContent   = `⭐ ${Number(p.avaliacao||5).toFixed(1)} (${p.avaliacoes_count||0} avaliações)`;
     document.getElementById("detailDesc").textContent     = p.descricao || "Sem descrição.";
     document.getElementById("detailStock").textContent    = `Estoque: ${p.estoque||0} unidades`;
@@ -1998,6 +2079,29 @@ function openDetail(id) {
 
     renderPerguntas(p);
     openModal("detailModal");
+}
+
+/* ================================================================
+   FUNÇÕES DE ZOOM NA IMAGEM (LIGHTBOX)
+================================================================ */
+function openImgZoom(src) {
+    const lightbox = document.getElementById("imgZoomLightbox");
+    const img = document.getElementById("lightboxImg");
+    img.src = src;
+    lightbox.classList.add("open");
+    lightbox.classList.remove("zoomed");
+}
+
+function closeImgZoom(e) {
+    if (e) e.stopPropagation();
+    const lightbox = document.getElementById("imgZoomLightbox");
+    lightbox.classList.remove("open", "zoomed");
+}
+
+function toggleLightboxZoom(e) {
+    if (e.target.tagName === "BUTTON") return;
+    const lightbox = document.getElementById("imgZoomLightbox");
+    lightbox.classList.toggle("zoomed");
 }
 
 function renderPerguntas(produto) {
