@@ -1,0 +1,22 @@
+# Dependências do Node / Capacitor
+node_modules/
+android/
+ios/
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+
+# Build
+dist/
+build/
+
+# Variáveis de ambiente (segurança)
+.env
+.env.local
+.env.production

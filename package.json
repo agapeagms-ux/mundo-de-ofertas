@@ -1,0 +1,23 @@
+{
+  "name": "mundo-de-ofertas",
+  "version": "4.0.0",
+  "description": "Mundo de Ofertas - Marketplace App",
+  "main": "index.js",
+  "scripts": {
+    "build": "echo 'No build step needed'",
+    "sync": "npx cap sync",
+    "android": "npx cap open android",
+    "ios": "npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/ios": "^6.0.0"
+  },
+  "keywords": ["marketplace", "ecommerce", "capacitor"],
+  "author": "Mundo de Ofertas",
+  "license": "MIT"
+}

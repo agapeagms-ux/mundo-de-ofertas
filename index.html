@@ -1,0 +1,1973 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0038A8">
+<meta name="description" content="Mundo de Ofertas v4.0 - Marketplace com Supabase Auth, Perfis e Banco em Tempo Real">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mundo de Ofertas">
+<title>Mundo de Ofertas</title>
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Supabase JS SDK v2 -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- Capacitor Runtime (carregado automaticamente pelo Capacitor ao empacotar) -->
+<!-- <script src="capacitor.js"></script> -->
+
+
+<style>
+/* ================================================================
+   CSS VARIABLES & DARK MODE
+================================================================ */
+:root {
+    --primary: #0038A8;
+    --primary-hover: #002d86;
+    --secondary: #0057ff;
+    --accent: #FFD700;
+    --accent-hover: #e6c200;
+
+    --bg: #f4f6f9;
+    --card: #ffffff;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+
+    --success: #10b981;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #3b82f6;
+
+    --shadow: 0 10px 25px -5px rgba(0,0,0,.05), 0 8px 10px -6px rgba(0,0,0,.05);
+    --shadow-hover: 0 20px 25px -5px rgba(0,0,0,.1), 0 8px 10px -6px rgba(0,0,0,.05);
+}
+
+.dark {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #f8fafc;
+    --text-muted: #94a3b8;
+    --border: #334155;
+    --shadow: 0 10px 25px -5px rgba(0,0,0,.3);
+    --shadow-hover: 0 20px 25px -5px rgba(0,0,0,.4);
+}
+
+/* ================================================================
+   RESET & BASE
+================================================================ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { min-height:100vh; padding-bottom:100px; background:var(--bg); color:var(--text); font-family:"Inter",system-ui,sans-serif; transition:background-color .25s,color .25s; }
+button,input,select,textarea { font:inherit; }
+button { cursor:pointer; }
+img { max-width:100%; }
+a { color:inherit; text-decoration:none; }
+
+/* ================================================================
+   HEADER
+================================================================ */
+header { position:sticky; top:0; z-index:1000; background:var(--primary); color:white; padding:14px 20px; box-shadow:var(--shadow); }
+.top-bar { max-width:1200px; margin:auto; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.logo { font-size:20px; font-weight:800; white-space:nowrap; }
+
+.nav-tabs { display:flex; gap:4px; padding:4px; border-radius:12px; background:rgba(255,255,255,.15); flex-wrap:wrap; }
+.nav-tab-btn { display:flex; align-items:center; gap:5px; padding:8px 13px; border:0; border-radius:8px; background:transparent; color:white; font-size:13px; font-weight:700; transition:.2s; }
+.nav-tab-btn:hover { background:rgba(255,255,255,.1); }
+.nav-tab-btn.active { background:white; color:var(--primary); box-shadow:0 2px 8px rgba(0,0,0,.15); }
+
+.actions { display:flex; align-items:center; gap:8px; }
+.icon-btn { display:flex; align-items:center; justify-content:center; gap:5px; min-height:40px; padding:8px 12px; border:0; border-radius:12px; background:white; color:#1e293b; font-weight:700; box-shadow:0 2px 6px rgba(0,0,0,.1); transition:.2s; white-space:nowrap; }
+.icon-btn:hover { transform:translateY(-2px); }
+.badge { min-width:22px; padding:2px 6px; border-radius:20px; background:var(--danger); color:white; font-size:11px; font-weight:800; text-align:center; }
+
+.user-chip { display:flex; align-items:center; gap:8px; padding:6px 12px; border-radius:20px; background:rgba(255,255,255,.18); color:white; font-size:13px; font-weight:700; }
+.user-avatar { width:28px; height:28px; border-radius:50%; background:var(--accent); color:#111; font-size:13px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+
+.search-container { max-width:1200px; margin:12px auto 0; }
+.search input { width:100%; padding:12px 18px; border:2px solid transparent; border-radius:25px; outline:none; font-size:15px; }
+.search input:focus { border-color:var(--accent); }
+
+/* ================================================================
+   FAB — BOTÃO FLUTUANTE INTELIGENTE
+================================================================ */
+.seller-fab { position:fixed; right:20px; bottom:20px; z-index:1500; display:flex; align-items:center; gap:8px; padding:14px 22px; border:0; border-radius:30px; background:var(--accent); color:#111; font-size:14px; font-weight:800; box-shadow:0 10px 25px rgba(0,0,0,.25); transition:transform .2s,background .2s; }
+.seller-fab:hover { transform:scale(1.06); background:var(--accent-hover); }
+.seller-fab.mode-vendedor { background:#10b981; color:white; }
+.seller-fab.mode-vendedor:hover { background:#059669; }
+
+/* ================================================================
+   LAYOUT & VIEWS
+================================================================ */
+.main-wrapper { width:min(1200px,calc(100% - 30px)); margin:auto; }
+.page-view { display:block; animation:fadeIn .25s ease; padding-top:20px; }
+.hidden { display:none !important; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+/* ================================================================
+   BANNER
+================================================================ */
+.banner { position:relative; overflow:hidden; margin:0 0 24px; padding:30px; border-radius:24px; background:linear-gradient(135deg,#0038A8,#0057ff); color:white; box-shadow:var(--shadow); }
+.banner::after { content:"🔥"; position:absolute; right:20px; bottom:-20px; font-size:120px; opacity:.12; pointer-events:none; }
+.banner h2 { font-size:30px; font-weight:800; margin-bottom:8px; }
+.banner button { margin-top:16px; padding:12px 24px; border:0; border-radius:12px; background:var(--accent); color:#111; font-weight:800; transition:.2s; }
+.banner button:hover { background:var(--accent-hover); transform:scale(1.03); }
+
+/* ================================================================
+   FILTROS
+================================================================ */
+.filter-bar { display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:space-between; background:var(--card); padding:14px 18px; border-radius:18px; border:1px solid var(--border); box-shadow:var(--shadow); margin-bottom:20px; }
+.filter-controls { display:flex; gap:14px; flex-wrap:wrap; align-items:center; }
+.filter-group { display:flex; align-items:center; gap:7px; }
+.filter-group label { font-size:13px; font-weight:700; color:var(--text-muted); }
+.filter-group input,.filter-group select { padding:8px 11px; border-radius:10px; border:1.5px solid var(--border); background:var(--bg); color:var(--text); font-size:13px; font-weight:700; outline:none; }
+
+/* ================================================================
+   CATEGORIAS
+================================================================ */
+.categorias { display:flex; gap:10px; padding:4px 2px 14px; overflow-x:auto; scrollbar-width:none; }
+.categorias::-webkit-scrollbar { display:none; }
+.categoria { min-width:110px; padding:12px 16px; border:1px solid var(--border); border-radius:14px; background:var(--card); color:var(--text); font-size:13px; font-weight:700; white-space:nowrap; box-shadow:var(--shadow); transition:.22s; text-align:center; }
+.categoria:hover { transform:translateY(-3px); border-color:var(--primary); }
+.categoria.active { background:var(--primary); color:white; border-color:var(--primary); }
+
+/* ================================================================
+   CARDS DE PRODUTO
+================================================================ */
+.produtos { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:20px; }
+.produto { display:flex; flex-direction:column; overflow:hidden; border:1px solid var(--border); border-radius:20px; background:var(--card); box-shadow:var(--shadow); transition:.3s; }
+.produto:hover { transform:translateY(-5px); box-shadow:var(--shadow-hover); }
+
+.img-container { position:relative; width:100%; height:190px; overflow:hidden; background:#e2e8f0; cursor:pointer; }
+.produto img { width:100%; height:100%; object-fit:cover; transition:transform .4s; }
+.produto:hover img { transform:scale(1.05); }
+
+.stock-badge { position:absolute; bottom:10px; left:10px; padding:4px 8px; border-radius:8px; font-size:11px; font-weight:800; background:rgba(15,23,42,.82); color:white; backdrop-filter:blur(2px); }
+.discount-tag { position:absolute; top:12px; left:12px; padding:4px 10px; border-radius:20px; background:var(--danger); color:white; font-size:12px; font-weight:800; }
+.favorite { position:absolute; top:10px; right:10px; width:36px; height:36px; border:0; border-radius:50%; background:rgba(255,255,255,.92); display:flex; align-items:center; justify-content:center; font-size:18px; transition:.2s; }
+.favorite:hover { transform:scale(1.12); }
+.favorite.active { background:#ffebee; }
+
+.produto-info { display:flex; flex-direction:column; flex-grow:1; padding:15px; }
+.produto-info h4 { font-size:15px; line-height:1.35; margin-bottom:4px; }
+.product-rating { display:flex; align-items:center; gap:5px; font-size:13px; font-weight:700; margin-bottom:4px; }
+.rating-stars { color:var(--accent); }
+.rating-count { color:var(--text-muted); font-size:12px; font-weight:600; }
+.category-tag { color:var(--text-muted); font-size:12px; margin-bottom:8px; }
+.preco-antigo { color:var(--text-muted); font-size:13px; text-decoration:line-through; }
+.preco { color:var(--primary); font-size:21px; font-weight:800; }
+.dark .preco { color:#60a5fa; }
+
+.add-cart { width:100%; margin-top:auto; padding-top:10px; padding:12px; border:0; border-radius:12px; background:var(--primary); color:white; font-size:14px; font-weight:800; transition:.2s; margin-top:12px; }
+.add-cart:hover:not(:disabled) { background:var(--primary-hover); }
+.add-cart:disabled { opacity:.52; cursor:not-allowed; }
+
+/* ================================================================
+   MODAIS
+================================================================ */
+.modal { position:fixed; inset:0; z-index:2000; display:none; align-items:center; justify-content:center; padding:15px; background:rgba(0,0,0,.6); backdrop-filter:blur(4px); }
+.modal.open { display:flex; }
+.modal-content { width:100%; max-width:520px; max-height:92vh; overflow-y:auto; padding:28px; border:1px solid var(--border); border-radius:24px; background:var(--card); color:var(--text); box-shadow:0 25px 50px -12px rgba(0,0,0,.28); }
+.modal-content.wide { max-width:680px; }
+.modal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; padding-bottom:14px; border-bottom:1px solid var(--border); }
+.modal-header h2 { font-size:20px; font-weight:800; }
+.btn-close-modal { width:32px; height:32px; border:0; border-radius:8px; background:#fee2e2; color:var(--danger); font-weight:800; display:flex; align-items:center; justify-content:center; }
+.btn-close-modal:hover { background:var(--danger); color:white; }
+
+/* AUTH MODAL TABS */
+.auth-tabs { display:flex; gap:0; margin-bottom:22px; border-radius:12px; overflow:hidden; border:1px solid var(--border); }
+.auth-tab { flex:1; padding:11px; border:0; background:var(--bg); color:var(--text-muted); font-weight:700; font-size:14px; transition:.2s; }
+.auth-tab.active { background:var(--primary); color:white; }
+
+/* FORMULÁRIOS */
+.form-group { margin-bottom:16px; }
+.form-group label { display:block; margin-bottom:6px; font-size:13px; font-weight:700; color:var(--text-muted); }
+.form-control { width:100%; padding:11px 14px; border:1.5px solid var(--border); border-radius:10px; outline:none; background:var(--bg); color:var(--text); font-size:14px; }
+.form-control:focus { border-color:var(--primary); }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+textarea.form-control { resize:vertical; min-height:70px; }
+
+.btn-primary { width:100%; padding:13px; border:0; border-radius:12px; background:var(--primary); color:white; font-weight:800; font-size:15px; transition:.2s; }
+.btn-primary:hover:not(:disabled) { background:var(--primary-hover); }
+.btn-primary:disabled { opacity:.55; cursor:not-allowed; }
+.btn-success { background:var(--success) !important; }
+.btn-danger  { background:var(--danger) !important; }
+.btn-warning { background:var(--warning) !important; color:#111 !important; }
+.btn-secondary { background:transparent; border:1.5px solid var(--border); color:var(--text-muted); width:100%; padding:12px; border-radius:12px; font-weight:700; margin-top:8px; }
+
+/* CARRINHO */
+.cart-item { display:grid; grid-template-columns:60px 1fr auto; gap:12px; padding:14px 0; border-bottom:1px solid var(--border); }
+.cart-item-img { width:60px; height:60px; border-radius:10px; object-fit:cover; }
+.quantity-control { display:flex; align-items:center; gap:7px; margin-top:8px; }
+.quantity-btn { width:28px; height:28px; border:1px solid var(--border); border-radius:7px; background:var(--bg); color:var(--text); font-weight:800; }
+.quantity-value { min-width:22px; text-align:center; font-size:13px; font-weight:800; }
+.coupon-box { display:flex; gap:8px; margin:16px 0 8px; }
+.coupon-box input { flex:1; padding:10px; border:1px solid var(--border); border-radius:10px; background:var(--bg); color:var(--text); }
+.coupon-box button { padding:10px 16px; border:0; border-radius:10px; background:var(--primary); color:white; font-weight:800; }
+.cart-summary { margin:14px 0; padding:14px 16px; border-radius:14px; background:var(--bg); }
+.summary-row { display:flex; justify-content:space-between; margin-bottom:6px; color:var(--text-muted); font-size:14px; }
+.total-row { margin-top:10px; padding-top:10px; border-top:1px dashed var(--border); color:var(--text) !important; font-size:18px; font-weight:800; }
+.total-row span:last-child { color:var(--primary); }
+.dark .total-row span:last-child { color:#60a5fa; }
+
+/* PAGAMENTO */
+.payment-selector { display:flex; gap:10px; margin-bottom:12px; }
+.payment-btn { flex:1; padding:12px; border:1.5px solid var(--border); border-radius:12px; background:var(--bg); color:var(--text); font-weight:700; font-size:14px; transition:.2s; }
+.payment-btn.active { border-color:var(--primary); background:var(--card); color:var(--primary); box-shadow:var(--shadow); }
+.payment-details { background:var(--bg); padding:14px; border-radius:12px; border:1px solid var(--border); margin-bottom:14px; }
+.pix-copy-row { display:flex; gap:8px; margin-top:8px; }
+.pix-copy-row input { flex:1; padding:9px 12px; border-radius:8px; border:1px solid var(--border); background:var(--card); color:var(--text); font-size:12px; font-family:monospace; }
+.btn-pix-copy { padding:9px 14px; border:0; border-radius:8px; background:var(--primary); color:white; font-size:13px; font-weight:800; }
+
+/* FRETE */
+.frete-box { margin:12px 0; padding:14px; border:1px solid var(--border); border-radius:14px; background:var(--bg); }
+.frete-input-group { display:flex; gap:8px; margin-top:8px; }
+.frete-input-group input { flex:1; padding:9px 12px; border:1px solid var(--border); border-radius:10px; background:var(--card); color:var(--text); }
+.frete-input-group button { padding:9px 14px; border:0; border-radius:10px; background:var(--primary); color:white; font-weight:800; }
+.frete-opcao { display:flex; justify-content:space-between; align-items:center; margin-top:7px; padding:10px; border:1px solid var(--border); border-radius:9px; background:var(--card); cursor:pointer; }
+.frete-opcao.selected { border-color:var(--primary); }
+
+/* DETALHES DO PRODUTO */
+.detail-img { width:100%; height:230px; object-fit:cover; border-radius:14px; margin-bottom:14px; }
+.question-item { margin-bottom:8px; background:var(--bg); padding:8px 12px; border-radius:10px; border:1px solid var(--border); font-size:13px; }
+
+/* ================================================================
+   PAINEL ADMIN
+================================================================ */
+.dashboard-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:14px; margin-bottom:22px; }
+.dash-card { padding:18px; border-radius:18px; background:var(--card); border:1px solid var(--border); box-shadow:var(--shadow); }
+.dash-card h4 { font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; }
+.dash-card .val { margin-top:6px; color:var(--primary); font-size:24px; font-weight:800; }
+.dark .dash-card .val { color:#60a5fa; }
+
+.admin-action-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:22px; }
+.btn-admin { display:flex; align-items:center; gap:7px; padding:10px 18px; border:0; border-radius:12px; font-size:14px; font-weight:800; color:white; transition:.2s; }
+.btn-admin:hover { transform:translateY(-2px); }
+
+.admin-layout { display:grid; grid-template-columns:380px 1fr; gap:22px; }
+.admin-card { border:1px solid var(--border); border-radius:20px; background:var(--card); box-shadow:var(--shadow); padding:24px; height:fit-content; }
+.admin-card-title { margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid var(--border); font-size:17px; font-weight:800; }
+
+.img-preview-box { display:flex; align-items:center; justify-content:center; width:100%; height:110px; margin-top:8px; border:2px dashed var(--border); border-radius:12px; background:var(--bg); color:var(--text-muted); font-size:13px; overflow:hidden; }
+.img-preview-box img { width:100%; height:100%; object-fit:cover; }
+
+.admin-table { width:100%; border-collapse:collapse; font-size:14px; }
+.admin-table th { padding:11px; background:var(--bg); color:var(--text-muted); text-align:left; font-size:12px; }
+.admin-table td { padding:12px 11px; border-bottom:1px solid var(--border); vertical-align:middle; }
+.table-img { width:46px; height:46px; border-radius:9px; object-fit:cover; }
+.btn-action { padding:6px 11px; border:0; border-radius:8px; color:white; font-size:12px; font-weight:700; margin-right:4px; cursor:pointer; }
+
+.seller-config-box { margin-bottom:22px; padding:20px; border-radius:18px; background:var(--card); border:1px solid var(--border); box-shadow:var(--shadow); }
+.wsp-row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; max-width:650px; margin-top:12px; }
+.wsp-row input { flex:1; min-width:200px; }
+
+/* COMPRAS / PEDIDOS */
+.pedido-card { background:var(--card); padding:18px; border-radius:16px; margin-bottom:14px; border:1px solid var(--border); box-shadow:var(--shadow); }
+.pedido-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.status-badge { padding:4px 10px; border-radius:20px; font-size:12px; font-weight:800; }
+.status-Em\ Separação { background:#fef9c3; color:#92400e; }
+.status-Enviado { background:#dbeafe; color:#1d4ed8; }
+.status-Entregue { background:#d1fae5; color:#065f46; }
+.status-Cancelado { background:#fee2e2; color:#991b1b; }
+
+/* TOAST */
+.toast-container { position:fixed; right:20px; bottom:95px; z-index:3000; display:flex; flex-direction:column; gap:10px; pointer-events:none; }
+.toast { min-width:260px; padding:12px 18px; border-radius:12px; background:#1e293b; color:white; font-size:14px; font-weight:700; animation:toastIn .3s ease; }
+@keyframes toastIn { from{opacity:0;transform:translateX(100%)} to{opacity:1;transform:translateX(0)} }
+
+/* LOADING SPINNER */
+.loading-overlay { position:fixed; inset:0; z-index:9999; display:none; align-items:center; justify-content:center; background:rgba(15,23,42,.72); backdrop-filter:blur(3px); }
+.loading-overlay.show { display:flex; }
+.spinner { width:44px; height:44px; border:4px solid rgba(255,255,255,.2); border-top-color:white; border-radius:50%; animation:spin .7s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* EMPTY STATE */
+.empty-state { grid-column:1/-1; text-align:center; padding:50px 10px; color:var(--text-muted); }
+.empty-state .icon { font-size:48px; margin-bottom:12px; }
+
+/* RESPONSIVE */
+@media(max-width:900px) { .admin-layout{grid-template-columns:1fr} }
+@media(max-width:700px) {
+    .top-bar{flex-wrap:wrap}
+    .logo{width:100%;text-align:center}
+    .nav-tabs{flex:1;width:100%;justify-content:center}
+    .nav-tab-btn{padding:7px 7px;font-size:11px}
+    .produtos{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .form-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="top-bar">
+        <div class="logo">🌎 Mundo de Ofertas</div>
+
+        <nav class="nav-tabs">
+            <button class="nav-tab-btn active" id="btnViewShop"    onclick="switchView('shop')">🛍️ Loja</button>
+            <button class="nav-tab-btn"         id="btnViewFavs"    onclick="switchView('favs')">❤️ Favoritos <span id="favCount" style="background:rgba(255,255,255,.2);padding:1px 6px;border-radius:10px;font-size:11px;">0</span></button>
+            <button class="nav-tab-btn"         id="btnViewCompras" onclick="switchView('compras')">📦 Minhas Compras</button>
+            <!-- ABA ADMIN: somente visível para vendedores logados -->
+            <button class="nav-tab-btn hidden"  id="btnViewAdmin"   onclick="switchView('admin')">⚙️ Painel</button>
+        </nav>
+
+        <div class="actions">
+            <button class="icon-btn" id="themeBtn" title="Alternar tema">🌙</button>
+            <div id="userArea" style="display:flex;align-items:center;gap:8px;"></div>
+            <button class="icon-btn" id="cartBtn">🛒 <span class="badge" id="cartCount">0</span></button>
+        </div>
+    </div>
+
+    <div class="search-container" id="searchBarWrapper">
+        <div class="search">
+            <input type="search" id="searchInput" autocomplete="off" placeholder="Pesquisar produtos..." oninput="aplicarFiltros()">
+        </div>
+    </div>
+</header>
+
+<main class="main-wrapper">
+
+<!-- ========== LOJA ========== -->
+<section id="shopView" class="page-view" style="padding-top:0">
+    <div class="banner" id="mainBanner" style="margin-top:20px">
+        <h2 id="bannerTitle">🔥 Grandes Ofertas do Dia</h2>
+        <p  id="bannerDesc" >Use o cupom PRIMEIRA10 para 10% de desconto!</p>
+        <button type="button" onclick="document.getElementById('produtosSection').scrollIntoView({behavior:'smooth'})">Ver Ofertas</button>
+    </div>
+
+    <div class="filter-bar">
+        <div id="productCountTag" style="font-size:13px;color:var(--text-muted);font-weight:700;"></div>
+        <div class="filter-controls">
+            <div class="filter-group">
+                <label for="priceFilter">Até (R$):</label>
+                <input type="number" id="priceFilter" placeholder="Ex: 500" style="width:100px" oninput="aplicarFiltros()">
+            </div>
+            <div class="filter-group">
+                <label for="sortSelect">Ordenar:</label>
+                <select id="sortSelect" onchange="aplicarFiltros()">
+                    <option value="destaque">🔥 Destaque</option>
+                    <option value="avaliacao">⭐ Mais Avaliados</option>
+                    <option value="precoAsc">💰 Menor Preço</option>
+                    <option value="precoDesc">💎 Maior Preço</option>
+                    <option value="desconto">🏷️ Maior Desconto</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="categorias" id="categoriasBar"></div>
+
+    <section id="produtosSection">
+        <div class="produtos" id="produtos">
+            <div class="empty-state"><div class="icon">⏳</div><p>Carregando produtos...</p></div>
+        </div>
+    </section>
+</section>
+
+<!-- ========== FAVORITOS ========== -->
+<section id="favsView" class="page-view hidden">
+    <h2>❤️ Meus Favoritos</h2>
+    <p style="color:var(--text-muted);margin:8px 0 18px">Produtos que você salvou para comprar depois.</p>
+    <div class="produtos" id="favsContainer"></div>
+</section>
+
+<!-- ========== MINHAS COMPRAS ========== -->
+<section id="comprasView" class="page-view hidden">
+    <h2>📦 Minhas Compras</h2>
+    <p style="color:var(--text-muted);margin:8px 0 18px">Histórico dos seus pedidos.</p>
+    <div id="minhasComprasContainer"></div>
+</section>
+
+<!-- ========== PAINEL DO VENDEDOR ========== -->
+<section id="adminView" class="page-view hidden">
+    <div style="margin-bottom:22px">
+        <h2>⚙️ Painel de Gestão</h2>
+        <p style="color:var(--text-muted);margin-top:4px">Gerencie seus produtos, vendas e configurações da loja.</p>
+    </div>
+
+    <!-- MÉTRICAS -->
+    <div class="dashboard-grid">
+        <div class="dash-card"><h4>Receita Total</h4><div class="val" id="dashReceita">R$ 0,00</div></div>
+        <div class="dash-card"><h4>Pedidos</h4><div class="val" id="dashPedidos">0</div></div>
+        <div class="dash-card"><h4>Estoque Crítico</h4><div class="val" id="dashCritico" style="color:var(--warning)">0</div></div>
+        <div class="dash-card"><h4>Produtos Ativos</h4><div class="val" id="dashProdutos">0</div></div>
+    </div>
+
+    <!-- AÇÕES RÁPIDAS -->
+    <div class="admin-action-row">
+        <button class="btn-admin" style="background:var(--success)" onclick="exportarCSV()">📊 Exportar CSV</button>
+        <button class="btn-admin" style="background:var(--primary)" onclick="openBannerConfig()">✏️ Editar Banner</button>
+    </div>
+
+    <!-- CONFIG WHATSAPP -->
+    <div class="seller-config-box">
+        <h3>📱 WhatsApp de Vendas</h3>
+        <p style="color:var(--text-muted);font-size:13px;margin-top:4px">Número que receberá os pedidos via WhatsApp.</p>
+        <div class="wsp-row">
+            <input type="text" id="wspSellerNumber" class="form-control" placeholder="(11) 99999-8888" oninput="mascaraTelefone(this)">
+            <button class="btn-admin" style="background:#25D366" onclick="salvarWhatsApp()">💾 Salvar</button>
+            <button class="btn-admin" style="background:var(--danger)" onclick="removerWhatsApp()">🗑️ Remover</button>
+        </div>
+        <div id="wspNotice" style="margin-top:10px;font-size:13px;font-weight:700;"></div>
+    </div>
+
+    <div class="admin-layout">
+        <!-- FORMULÁRIO -->
+        <div class="admin-card">
+            <div class="admin-card-title" id="formCardTitle">➕ Cadastrar Produto</div>
+            <form id="productForm" onsubmit="handleSaveProduct(event)">
+                <input type="hidden" id="editProductId">
+
+                <div class="form-group">
+                    <label>Nome *</label>
+                    <input id="pNome" class="form-control" type="text" required maxlength="100" placeholder="Ex: Smartphone X Pro">
+                </div>
+                <div class="form-group">
+                    <label>Categoria *</label>
+                    <select id="pCategoria" class="form-control" onchange="toggleNovaCat()" required></select>
+                </div>
+                <div class="form-group hidden" id="novaCatGroup">
+                    <label>Nova Categoria</label>
+                    <input id="pNovaCategoria" class="form-control" type="text" maxlength="50">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Preço Atual (R$) *</label>
+                        <input id="pPreco" class="form-control" type="number" min="0" step="0.01" required oninput="calcDesconto()">
+                    </div>
+                    <div class="form-group">
+                        <label>Preço Antigo</label>
+                        <input id="pAntigo" class="form-control" type="number" min="0" step="0.01" oninput="calcDesconto()">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Estoque *</label>
+                        <input id="pEstoque" class="form-control" type="number" min="0" value="10" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Avaliação (1-5) *</label>
+                        <input id="pAvaliacao" class="form-control" type="number" min="1" max="5" step="0.1" value="4.8" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Nº de Avaliações *</label>
+                    <input id="pAvaliacoesCount" class="form-control" type="number" min="0" value="45" required>
+                </div>
+                <div class="form-group">
+                    <label>Descrição</label>
+                    <textarea id="pDescricao" class="form-control" placeholder="Detalhes do produto..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>URL da Imagem ou Base64 *</label>
+                    <input id="pImagem" class="form-control" type="text" placeholder="https://... ou carregue um arquivo" oninput="previewImg()">
+                    <label style="font-size:12px;color:var(--text-muted);margin-top:6px;display:block">Ou envie do computador:</label>
+                    <input type="file" id="pImgFile" accept="image/*" class="form-control" style="padding:6px;margin-top:4px" onchange="processarImagemLocal(event)">
+                    <div class="img-preview-box" id="imgPreviewBox"><span>Preview da imagem</span></div>
+                </div>
+                <div class="form-group">
+                    <label>Desconto (%)</label>
+                    <input id="pDesconto" class="form-control" type="number" readonly value="0">
+                </div>
+                <button class="btn-primary" id="btnSubmitForm" type="submit">➕ Cadastrar Produto</button>
+                <button class="btn-secondary hidden" id="btnCancelEdit" type="button" onclick="resetForm()">Cancelar Edição</button>
+            </form>
+        </div>
+
+        <!-- TABELA + VENDAS -->
+        <div style="display:flex;flex-direction:column;gap:20px">
+            <div class="admin-card">
+                <div class="admin-card-title">📋 Meus Produtos</div>
+                <div style="overflow-x:auto">
+                    <table class="admin-table">
+                        <thead><tr><th>Img</th><th>Nome</th><th>Estoque</th><th>Preço</th><th>Ações</th></tr></thead>
+                        <tbody id="adminTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="admin-card">
+                <div class="admin-card-title">📈 Vendas Recebidas</div>
+                <div id="vendasContainer"></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+</main>
+
+<!-- ===================================================
+     FAB INTELIGENTE
+=================================================== -->
+<button class="seller-fab" id="sellerFab" onclick="handleFabClick()">
+    💼 <span id="fabLabel">Tornar-se Vendedor</span>
+</button>
+
+<!-- ===================================================
+     MODAL: LOGIN / CADASTRO
+=================================================== -->
+<div class="modal" id="authModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="authModalTitle">Entrar na sua conta</h2>
+            <button class="btn-close-modal" onclick="closeModal('authModal')">✕</button>
+        </div>
+        <div class="auth-tabs">
+            <button class="auth-tab active" id="tabLogin"    onclick="switchAuthTab('login')">🔑 Entrar</button>
+            <button class="auth-tab"         id="tabCadastro" onclick="switchAuthTab('cadastro')">✨ Criar Conta</button>
+        </div>
+
+        <!-- LOGIN -->
+        <div id="loginForm">
+            <div class="form-group">
+                <label>E-mail</label>
+                <input type="email" id="loginEmail" class="form-control" placeholder="seu@email.com">
+            </div>
+            <div class="form-group">
+                <label>Senha</label>
+                <input type="password" id="loginSenha" class="form-control" placeholder="••••••••">
+            </div>
+            <button class="btn-primary" onclick="fazerLogin()" id="btnLogin">🔑 Entrar</button>
+            <p style="text-align:center;margin-top:14px;font-size:13px;color:var(--text-muted)">
+                Não tem conta? <a href="#" onclick="switchAuthTab('cadastro')" style="color:var(--primary);font-weight:700">Cadastre-se grátis</a>
+            </p>
+        </div>
+
+        <!-- CADASTRO -->
+        <div id="cadastroForm" class="hidden">
+            <div class="form-group">
+                <label>E-mail *</label>
+                <input type="email" id="cadEmail" class="form-control" placeholder="seu@email.com">
+            </div>
+            <div class="form-group">
+                <label>Senha * (mínimo 6 caracteres)</label>
+                <input type="password" id="cadSenha" class="form-control" placeholder="••••••••">
+            </div>
+            <div class="form-group">
+                <label>Confirmar Senha *</label>
+                <input type="password" id="cadSenhaConf" class="form-control" placeholder="••••••••">
+            </div>
+            <button class="btn-primary btn-success" onclick="fazerCadastro()" id="btnCadastro">✨ Criar Conta</button>
+            <p style="text-align:center;margin-top:14px;font-size:13px;color:var(--text-muted)">
+                Já tem conta? <a href="#" onclick="switchAuthTab('login')" style="color:var(--primary);font-weight:700">Entrar agora</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- ===================================================
+     MODAL: UPGRADE PARA VENDEDOR
+=================================================== -->
+<div class="modal" id="upgradeModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>💼 Tornar-se Vendedor</h2>
+            <button class="btn-close-modal" onclick="closeModal('upgradeModal')">✕</button>
+        </div>
+        <p style="color:var(--text-muted);margin-bottom:20px;font-size:14px">Preencha os dados abaixo para ativar sua conta de vendedor e começar a vender no Mundo de Ofertas.</p>
+
+        <div class="form-group">
+            <label>Nome da Loja *</label>
+            <input type="text" id="upgNomeLoja" class="form-control" placeholder="Ex: Eletrônicos do João" maxlength="80">
+        </div>
+        <div class="form-group">
+            <label>CPF ou CNPJ * (somente números)</label>
+            <input type="text" id="upgCpfCnpj" class="form-control" placeholder="000.000.000-00 ou 00.000.000/0000-00" oninput="mascaraCpfCnpj(this)" maxlength="18">
+            <small id="cpfCnpjFeedback" style="font-size:12px;margin-top:4px;display:block;"></small>
+        </div>
+        <button class="btn-primary btn-warning" onclick="salvarUpgradeVendedor()" id="btnUpgrade">💼 Ativar Conta de Vendedor</button>
+        <button class="btn-secondary" onclick="closeModal('upgradeModal')">Cancelar</button>
+    </div>
+</div>
+
+<!-- ===================================================
+     MODAL: CARRINHO DE COMPRAS
+=================================================== -->
+<div class="modal" id="cartModal">
+    <div class="modal-content wide">
+        <div class="modal-header">
+            <h2>🛒 Seu Carrinho</h2>
+            <button class="btn-close-modal" onclick="closeCart()">✕</button>
+        </div>
+
+        <div id="cartItems"></div>
+
+        <div class="coupon-box">
+            <input type="text" id="couponInput" placeholder="Cupom de desconto (ex: PRIMEIRA10)">
+            <button onclick="aplicarCupom()">Aplicar</button>
+        </div>
+        <button class="btn-secondary" style="color:var(--danger);border-color:#fecaca;margin-bottom:14px" onclick="esvaziarCarrinho()">🧹 Esvaziar Carrinho</button>
+
+        <!-- PAGAMENTO -->
+        <div style="margin-bottom:14px">
+            <p style="font-size:14px;font-weight:800;margin-bottom:10px">💳 Forma de Pagamento:</p>
+            <div class="payment-selector">
+                <button class="payment-btn active" id="btnPayPix"  onclick="setPayment('pix')">⚡ Pix</button>
+                <button class="payment-btn"         id="btnPayCard" onclick="setPayment('card')">💳 Cartão</button>
+            </div>
+            <div class="payment-details" id="pixDetails">
+                <p style="font-size:13px;color:var(--text-muted)">Chave Pix simulada:</p>
+                <div class="pix-copy-row">
+                    <input type="text" id="pixKeyInput" readonly value="00020126360014BR.GOV.BCB.PIX0114+5511999998888">
+                    <button class="btn-pix-copy" onclick="copiarPix()">📋 Copiar</button>
+                </div>
+            </div>
+            <div class="payment-details hidden" id="cardDetails">
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:8px">Dados do Cartão (Simulado):</p>
+                <input type="text" id="cardNum" placeholder="0000 0000 0000 0000" class="form-control" style="margin-bottom:8px">
+                <div style="display:flex;gap:8px">
+                    <input type="text" placeholder="MM/AA" maxlength="5" class="form-control" style="flex:1">
+                    <input type="text" placeholder="CVV" maxlength="4" class="form-control" style="flex:1">
+                </div>
+            </div>
+        </div>
+
+        <!-- FRETE -->
+        <div class="frete-box">
+            <p style="font-size:13px;font-weight:800">🚚 Simular Frete (ViaCEP)</p>
+            <div class="frete-input-group">
+                <input id="cepInput" type="text" maxlength="9" placeholder="00000-000" oninput="mascaraCEP(this)">
+                <button onclick="calcularFrete()">Calcular</button>
+            </div>
+            <div id="freteResultado" style="margin-top:10px;font-size:13px"></div>
+        </div>
+
+        <!-- RESUMO -->
+        <div class="cart-summary">
+            <div class="summary-row"><span>Subtotal:</span><strong id="cartSubtotal">R$ 0,00</strong></div>
+            <div class="summary-row hidden" id="discountRow" style="color:var(--success)"><span>Desconto (cupom):</span><strong id="cartDiscount">-R$ 0,00</strong></div>
+            <div class="summary-row"><span>Frete:</span><strong id="cartFreteVal">R$ 0,00</strong></div>
+            <div class="summary-row total-row"><span>Total:</span><span id="cartTotal">R$ 0,00</span></div>
+        </div>
+
+        <button class="add-cart" style="background:#25D366" onclick="enviarWhatsApp()">💬 Confirmar e Enviar via WhatsApp</button>
+    </div>
+</div>
+
+<!-- ===================================================
+     MODAL: DETALHES DO PRODUTO
+=================================================== -->
+<div class="modal" id="detailModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="detailTitle">Detalhes</h2>
+            <button class="btn-close-modal" onclick="closeModal('detailModal')">✕</button>
+        </div>
+        <img id="detailImg" class="detail-img" alt="Produto">
+        <div id="detailRating" style="font-size:14px;font-weight:700;margin-bottom:6px"></div>
+        <p id="detailDesc" style="color:var(--text-muted);font-size:14px;line-height:1.5;margin-bottom:8px"></p>
+        <div id="detailStock" style="font-size:13px;font-weight:700;margin-bottom:6px"></div>
+        <div id="detailPrice" style="font-size:24px;font-weight:800;color:var(--primary);margin-bottom:4px"></div>
+        <div id="detailParcelas" style="font-size:13px;color:var(--success);font-weight:700;margin-bottom:14px"></div>
+        <button class="add-cart" id="detailAddBtn" style="margin-bottom:20px">🛒 Adicionar ao Carrinho</button>
+        <hr style="border:0;border-top:1px solid var(--border);margin-bottom:16px">
+        <h4 style="font-size:14px;font-weight:800;margin-bottom:10px">❓ Perguntas ao Vendedor</h4>
+        <div id="questionsContainer" style="margin-bottom:12px;max-height:140px;overflow-y:auto"></div>
+        <div style="display:flex;gap:8px">
+            <input type="text" id="questionInput" placeholder="Faça uma pergunta..." class="form-control" style="flex:1">
+            <button onclick="enviarPergunta()" style="padding:10px 16px;border:0;border-radius:10px;background:var(--primary);color:white;font-weight:800">Enviar</button>
+        </div>
+    </div>
+</div>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay"><div class="spinner"></div></div>
+<!-- TOASTS -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ===================================================
+     JAVASCRIPT
+=================================================== -->
+<script>
+"use strict";
+
+/* ================================================================
+   1. CONFIGURAÇÃO SUPABASE
+   Substitua pelas suas credenciais do painel Supabase:
+   Dashboard → Settings → API
+================================================================ */
+const SUPABASE_URL  = "https://btyfcbnnsgcslsbqxxpf.supabase.co";
+const SUPABASE_KEY  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ0eWZjYm5uc2djc2xzYnF4eHBmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcxODA5MDgsImV4cCI6MjEwMjc1NjkwOH0.g8Z285KqBjFGcuODfbs7CKy-OJvnFsAT6svvkTs4qfg";
+
+const { createClient } = supabase;
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ================================================================
+   2. ESTADO GLOBAL
+================================================================ */
+let currentUser    = null;   // objeto auth.user do Supabase
+let currentProfile = null;   // linha da tabela profiles
+let produtos       = [];     // catálogo carregado do Supabase
+let meusProdutos   = [];     // produtos do vendedor logado
+let meusPedidos    = [];     // pedidos como comprador
+let minhasVendas   = [];     // pedidos como vendedor
+let categoriaAtual = "Todos";
+let produtoAtualId = null;
+
+// Carrinho e favoritos em localStorage (funciona sem login)
+let carrinho   = JSON.parse(localStorage.getItem("mo_carrinho_v4"))   || [];
+let favoritos  = JSON.parse(localStorage.getItem("mo_favoritos_v4"))  || [];
+let descontoCupom   = 0;
+let metodoPagamento = "pix";
+let freteSelecionado = { valor:0, tipo:"", prazo:"", localidade:"" };
+
+const LOCAL_STORAGE_KEYS = {
+    carrinho:   "mo_carrinho_v4",
+    favoritos:  "mo_favoritos_v4",
+    tema:       "mo_tema_v4",
+    whatsapp:   "mo_whatsapp",
+    banner:     "mo_banner"
+};
+
+/* ================================================================
+   3. UTILITÁRIOS
+================================================================ */
+const fmt = v => new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(Number(v)||0);
+
+function escapeHTML(v) {
+    const d = document.createElement("div");
+    d.textContent = String(v ?? "");
+    return d.innerHTML;
+}
+
+function urlSegura(url) {
+    if (!url) return false;
+    if (url.startsWith("data:image/")) return true;
+    try { const p = new URL(url); return p.protocol === "http:" || p.protocol === "https:"; }
+    catch { return false; }
+}
+
+function imgUrl(url) { return urlSegura(url) ? url : "https://picsum.photos/400/300?random=1"; }
+
+function showToast(msg, tipo = "success") {
+    const c = document.getElementById("toastContainer");
+    const t = document.createElement("div");
+    t.className = "toast";
+    t.textContent = (tipo==="danger"?"❌":tipo==="info"?"ℹ️":"✅") + " " + msg;
+    c.appendChild(t);
+    setTimeout(()=>{ t.style.opacity="0"; setTimeout(()=>t.remove(),300); }, 2800);
+}
+
+function loading(show) {
+    document.getElementById("loadingOverlay").classList.toggle("show", show);
+}
+
+function openModal(id)  { document.getElementById(id).classList.add("open"); }
+function closeModal(id) { document.getElementById(id).classList.remove("open"); }
+function closeCart()    { closeModal("cartModal"); }
+function closeDetail()  { closeModal("detailModal"); produtoAtualId = null; }
+
+/* ================================================================
+   4. AUTENTICAÇÃO SUPABASE
+================================================================ */
+
+// Listener reativo de estado de autenticação
+sb.auth.onAuthStateChange(async (event, session) => {
+    currentUser = session?.user ?? null;
+    if (currentUser) {
+        await carregarPerfil();
+    } else {
+        currentProfile = null;
+        meusProdutos   = [];
+        minhasVendas   = [];
+    }
+    atualizarUI();
+    await carregarProdutos();
+});
+
+async function carregarPerfil() {
+    if (!currentUser) return;
+    const { data, error } = await sb
+        .from("profiles")
+        .select("*")
+        .eq("id", currentUser.id)
+        .single();
+    if (!error && data) {
+        currentProfile = data;
+        if (data.whatsapp) {
+            localStorage.setItem(LOCAL_STORAGE_KEYS.whatsapp, data.whatsapp);
+        }
+    }
+}
+
+async function fazerLogin() {
+    const email = document.getElementById("loginEmail").value.trim();
+    const senha  = document.getElementById("loginSenha").value;
+    if (!email || !senha) return showToast("Preencha e-mail e senha.", "danger");
+
+    loading(true);
+    const { error } = await sb.auth.signInWithPassword({ email, password: senha });
+    loading(false);
+
+    if (error) {
+        showToast("E-mail ou senha incorretos.", "danger");
+        return;
+    }
+    closeModal("authModal");
+    showToast("Login realizado com sucesso! Bem-vindo(a) de volta. 👋");
+}
+
+async function fazerCadastro() {
+    const email    = document.getElementById("cadEmail").value.trim();
+    const senha    = document.getElementById("cadSenha").value;
+    const senhaConf = document.getElementById("cadSenhaConf").value;
+
+    if (!email || !senha) return showToast("Preencha todos os campos.", "danger");
+    if (senha.length < 6)  return showToast("A senha precisa ter pelo menos 6 caracteres.", "danger");
+    if (senha !== senhaConf) return showToast("As senhas não coincidem.", "danger");
+
+    loading(true);
+    const { data, error } = await sb.auth.signUp({ email, password: senha });
+    loading(false);
+
+    if (error) {
+        showToast(error.message || "Erro ao criar conta.", "danger");
+        return;
+    }
+
+    // O trigger PostgreSQL cria a linha em profiles automaticamente.
+    closeModal("authModal");
+    showToast("Conta criada! Bem-vindo(a) ao Mundo de Ofertas! ✨");
+}
+
+async function fazerLogout() {
+    await sb.auth.signOut();
+    currentUser    = null;
+    currentProfile = null;
+    meusProdutos   = [];
+    minhasVendas   = [];
+    switchView("shop");
+    showToast("Sessão encerrada. Até logo! 👋", "info");
+}
+
+/* ================================================================
+   5. ATUALIZAÇÃO DE UI (cabeçalho, FAB, abas)
+================================================================ */
+function atualizarUI() {
+    const userArea    = document.getElementById("userArea");
+    const btnAdmin    = document.getElementById("btnViewAdmin");
+    const fab         = document.getElementById("sellerFab");
+    const fabLabel    = document.getElementById("fabLabel");
+    userArea.innerHTML = "";
+
+    if (currentUser && currentProfile) {
+        const inicial = (currentProfile.email || "U")[0].toUpperCase();
+        const nomeLoja = currentProfile.nome_loja || currentProfile.email.split("@")[0];
+
+        userArea.innerHTML = `
+            <div class="user-chip">
+                <div class="user-avatar">${inicial}</div>
+                <span style="max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(nomeLoja)}</span>
+            </div>
+        `;
+        const btnLogout = document.createElement("button");
+        btnLogout.className = "icon-btn";
+        btnLogout.textContent = "🚪 Sair";
+        btnLogout.style.cssText = "background:#fef2f2;color:var(--danger);font-size:12px;";
+        btnLogout.onclick = fazerLogout;
+        userArea.appendChild(btnLogout);
+
+        if (currentProfile.role === "vendedor") {
+            btnAdmin.classList.remove("hidden");
+            fab.className = "seller-fab mode-vendedor";
+            fabLabel.textContent = "Painel de Vendas";
+        } else {
+            btnAdmin.classList.add("hidden");
+            fab.className = "seller-fab";
+            fabLabel.textContent = "Tornar-se Vendedor";
+        }
+    } else {
+        // Não logado
+        const btnEntrar = document.createElement("button");
+        btnEntrar.className = "icon-btn";
+        btnEntrar.innerHTML = "🔑 Entrar";
+        btnEntrar.onclick = () => { switchAuthTab("login"); openModal("authModal"); };
+        userArea.appendChild(btnEntrar);
+
+        btnAdmin.classList.add("hidden");
+        fab.className = "seller-fab";
+        fabLabel.textContent = "Tornar-se Vendedor";
+    }
+}
+
+/* FAB inteligente */
+function handleFabClick() {
+    if (currentProfile?.role === "vendedor") {
+        // Vendedor → alterna para o painel
+        const adminView = document.getElementById("adminView");
+        if (adminView.classList.contains("hidden")) {
+            switchView("admin");
+        } else {
+            switchView("shop");
+        }
+    } else if (currentUser) {
+        // Logado mas é cliente → abre modal de upgrade
+        openModal("upgradeModal");
+    } else {
+        // Não logado → abre login primeiro
+        switchAuthTab("login");
+        openModal("authModal");
+        showToast("Faça login para se tornar vendedor.", "info");
+    }
+}
+
+/* ================================================================
+   6. UPGRADE PARA VENDEDOR
+================================================================ */
+
+function mascaraCpfCnpj(input) {
+    let v = input.value.replace(/\D/g, "");
+    if (v.length <= 11) {
+        v = v.replace(/(\d{3})(\d)/, "$1.$2")
+              .replace(/(\d{3})(\d)/, "$1.$2")
+              .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+    } else {
+        v = v.substring(0,14)
+              .replace(/(\d{2})(\d)/, "$1.$2")
+              .replace(/(\d{3})(\d)/, "$1.$2")
+              .replace(/(\d{3})(\d)/, "$1/$2")
+              .replace(/(\d{4})(\d{1,2})$/, "$1-$2");
+    }
+    input.value = v;
+    const feedback = document.getElementById("cpfCnpjFeedback");
+    const numeros  = input.value.replace(/\D/g,"");
+    if (numeros.length === 0) { feedback.textContent = ""; return; }
+    if (numeros.length === 11) {
+        feedback.textContent = validarCPF(numeros) ? "✅ CPF válido" : "❌ CPF inválido";
+        feedback.style.color = validarCPF(numeros) ? "var(--success)" : "var(--danger)";
+    } else if (numeros.length === 14) {
+        feedback.textContent = validarCNPJ(numeros) ? "✅ CNPJ válido" : "❌ CNPJ inválido";
+        feedback.style.color = validarCNPJ(numeros) ? "var(--success)" : "var(--danger)";
+    } else {
+        feedback.textContent = "⚠️ Continue digitando (CPF: 11 dígitos, CNPJ: 14 dígitos)";
+        feedback.style.color = "var(--warning)";
+    }
+}
+
+function validarCPF(cpf) {
+    if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) return false;
+    let soma = 0;
+    for (let i = 0; i < 9; i++) soma += parseInt(cpf[i]) * (10 - i);
+    let r = 11 - (soma % 11);
+    if (r > 9) r = 0;
+    if (r !== parseInt(cpf[9])) return false;
+    soma = 0;
+    for (let i = 0; i < 10; i++) soma += parseInt(cpf[i]) * (11 - i);
+    r = 11 - (soma % 11);
+    if (r > 9) r = 0;
+    return r === parseInt(cpf[10]);
+}
+
+function validarCNPJ(cnpj) {
+    if (cnpj.length !== 14 || /^(\d)\1+$/.test(cnpj)) return false;
+    const calcDig = (str, pesos) => {
+        let soma = 0;
+        for (let i = 0; i < str.length; i++) soma += parseInt(str[i]) * pesos[i];
+        const r = soma % 11;
+        return r < 2 ? 0 : 11 - r;
+    };
+    const d1 = calcDig(cnpj.substring(0,12), [5,4,3,2,9,8,7,6,5,4,3,2]);
+    if (d1 !== parseInt(cnpj[12])) return false;
+    const d2 = calcDig(cnpj.substring(0,13), [6,5,4,3,2,9,8,7,6,5,4,3,2]);
+    return d2 === parseInt(cnpj[13]);
+}
+
+async function salvarUpgradeVendedor() {
+    const nomeLoja = document.getElementById("upgNomeLoja").value.trim();
+    const cpfCnpj  = document.getElementById("upgCpfCnpj").value.replace(/\D/g,"");
+
+    if (!nomeLoja) return showToast("Informe o nome da loja.", "danger");
+    if (cpfCnpj.length !== 11 && cpfCnpj.length !== 14) {
+        return showToast("CPF (11 dígitos) ou CNPJ (14 dígitos) inválido.", "danger");
+    }
+    if (cpfCnpj.length === 11 && !validarCPF(cpfCnpj)) return showToast("CPF inválido.", "danger");
+    if (cpfCnpj.length === 14 && !validarCNPJ(cpfCnpj)) return showToast("CNPJ inválido.", "danger");
+
+    loading(true);
+    const { error } = await sb
+        .from("profiles")
+        .update({ role:"vendedor", nome_loja:nomeLoja, cpf_cnpj:cpfCnpj })
+        .eq("id", currentUser.id);
+    loading(false);
+
+    if (error) { showToast("Erro ao ativar conta de vendedor: " + error.message, "danger"); return; }
+
+    await carregarPerfil();
+    atualizarUI();
+    closeModal("upgradeModal");
+    showToast(`Conta de vendedor ativada! Bem-vindo, ${nomeLoja}! 🎉`);
+    setTimeout(()=>switchView("admin"), 800);
+}
+
+/* ================================================================
+   7. NAVEGAÇÃO
+================================================================ */
+function switchView(view) {
+    document.querySelectorAll(".page-view").forEach(v => v.classList.add("hidden"));
+    document.querySelectorAll(".nav-tab-btn").forEach(b => b.classList.remove("active"));
+
+    const vEl = document.getElementById(view + "View");
+    if (vEl) vEl.classList.remove("hidden");
+
+    const bEl = document.getElementById("btnView" + view.charAt(0).toUpperCase() + view.slice(1));
+    if (bEl) bEl.classList.add("active");
+
+    const sw = document.getElementById("searchBarWrapper");
+    if (sw) sw.style.display = view === "shop" ? "block" : "none";
+
+    const fab       = document.getElementById("sellerFab");
+    const fabLabel  = document.getElementById("fabLabel");
+    if (view === "admin") {
+        if (fab)      fab.className = "seller-fab mode-vendedor";
+        if (fabLabel) fabLabel.textContent = "Ver Loja";
+        carregarDadosAdmin();
+    } else {
+        if (currentProfile?.role === "vendedor") {
+            if (fab)      fab.className = "seller-fab mode-vendedor";
+            if (fabLabel) fabLabel.textContent = "Painel de Vendas";
+        }
+        if (view === "shop")    aplicarFiltros();
+        if (view === "favs")    renderFavoritosView();
+        if (view === "compras") carregarMinhasCompras();
+    }
+}
+
+function switchAuthTab(tab) {
+    const loginF  = document.getElementById("loginForm");
+    const cadF    = document.getElementById("cadastroForm");
+    const tabL    = document.getElementById("tabLogin");
+    const tabC    = document.getElementById("tabCadastro");
+    const title   = document.getElementById("authModalTitle");
+    if (tab === "login") {
+        loginF.classList.remove("hidden"); cadF.classList.add("hidden");
+        tabL.classList.add("active"); tabC.classList.remove("active");
+        title.textContent = "Entrar na sua conta";
+    } else {
+        cadF.classList.remove("hidden"); loginF.classList.add("hidden");
+        tabC.classList.add("active"); tabL.classList.remove("active");
+        title.textContent = "Criar nova conta";
+    }
+}
+
+/* ================================================================
+   8. CATÁLOGO DE PRODUTOS (SUPABASE)
+================================================================ */
+async function carregarProdutos() {
+    const { data, error } = await sb
+        .from("produtos")
+        .select("*")
+        .eq("ativo", true)
+        .order("created_at", { ascending: false });
+
+    if (error) {
+        showToast("Erro ao carregar produtos.", "danger");
+        return;
+    }
+    produtos = data || [];
+    renderCategorias();
+    aplicarFiltros();
+}
+
+/* ================================================================
+   9. CATEGORIAS
+================================================================ */
+const CATEGORIAS_ICONES = {
+    Todos:"✨","Eletrônicos":"📱",Games:"🎮",Casa:"🏠",Esportes:"⚽",
+    Roupas:"👕",Livros:"📚",Beleza:"💄",Geral:"🏷️"
+};
+function iconeCateg(c) { return CATEGORIAS_ICONES[c] || "🏷️"; }
+
+function obterCategorias() {
+    return ["Todos", ...new Set(produtos.map(p=>p.categoria).filter(Boolean))];
+}
+
+function renderCategorias() {
+    const bar = document.getElementById("categoriasBar");
+    bar.replaceChildren();
+    obterCategorias().forEach(cat => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "categoria" + (categoriaAtual === cat ? " active" : "");
+        btn.textContent = `${iconeCateg(cat)} ${cat}`;
+        btn.onclick = () => { categoriaAtual = cat; renderCategorias(); aplicarFiltros(); };
+        bar.appendChild(btn);
+    });
+    renderSelectCategorias();
+}
+
+function renderSelectCategorias() {
+    const sel = document.getElementById("pCategoria");
+    if (!sel) return;
+    sel.replaceChildren();
+    obterCategorias().filter(c=>c!=="Todos").forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c; opt.textContent = `${iconeCateg(c)} ${c}`;
+        sel.appendChild(opt);
+    });
+    const nova = document.createElement("option");
+    nova.value = "__NOVA__"; nova.textContent = "+ Nova Categoria...";
+    sel.appendChild(nova);
+}
+
+/* ================================================================
+   10. RENDERIZAÇÃO E FILTROS
+================================================================ */
+function aplicarFiltros() {
+    const termo    = (document.getElementById("searchInput").value||"").toLowerCase().trim();
+    const maxPrice = parseFloat(document.getElementById("priceFilter")?.value) || Infinity;
+    const sort     = document.getElementById("sortSelect")?.value || "destaque";
+
+    let lista = produtos.filter(p =>
+        p.nome.toLowerCase().includes(termo) &&
+        (categoriaAtual === "Todos" || p.categoria === categoriaAtual) &&
+        p.preco <= maxPrice
+    );
+
+    if (sort === "avaliacao")  lista.sort((a,b) => (b.avaliacao||0)-(a.avaliacao||0));
+    if (sort === "precoAsc")   lista.sort((a,b) => a.preco-b.preco);
+    if (sort === "precoDesc")  lista.sort((a,b) => b.preco-a.preco);
+    if (sort === "desconto")   lista.sort((a,b) => (b.desconto||0)-(a.desconto||0));
+
+    renderProdutos(lista);
+}
+
+function renderProdutos(lista) {
+    const container = document.getElementById("produtos");
+    container.replaceChildren();
+    document.getElementById("productCountTag").textContent = `${lista.length} produto(s)`;
+
+    if (!lista.length) {
+        container.innerHTML = `<div class="empty-state"><div class="icon">🔍</div><h3>Nenhum produto</h3><p>Tente outros filtros.</p></div>`;
+        return;
+    }
+
+    lista.forEach(p => {
+        const card = document.createElement("article");
+        card.className = "produto";
+        const fav       = favoritos.includes(String(p.id));
+        const semEstoque= Number(p.estoque||0) <= 0;
+        const av        = Number(p.avaliacao||5).toFixed(1);
+        const cnt       = Number(p.avaliacoes_count||0);
+
+        card.innerHTML = `
+            <div class="img-container" onclick="openDetail('${p.id}')">
+                <img src="${escapeHTML(imgUrl(p.imagem))}" alt="${escapeHTML(p.nome)}" loading="lazy">
+                <span class="stock-badge">${semEstoque ? "Esgotado" : p.estoque+" em estoque"}</span>
+                ${p.desconto>0 ? `<div class="discount-tag">-${p.desconto}%</div>` : ""}
+                <button class="favorite ${fav?"active":""}" type="button" onclick="event.stopPropagation();toggleFavorito('${p.id}')">
+                    ${fav?"❤️":"🤍"}
+                </button>
+            </div>
+            <div class="produto-info">
+                <h4>${escapeHTML(p.nome)}</h4>
+                <div class="product-rating">
+                    <span class="rating-stars">⭐ ${av}</span>
+                    <span class="rating-count">(${cnt})</span>
+                </div>
+                <span class="category-tag">${escapeHTML(p.categoria)}</span>
+                <div>
+                    ${p.preco_antigo ? `<div class="preco-antigo">${fmt(p.preco_antigo)}</div>` : ""}
+                    <div class="preco">${fmt(p.preco)}</div>
+                </div>
+                <button class="add-cart" ${semEstoque?"disabled":""} onclick="addCarrinho('${p.id}')">
+                    ${semEstoque ? "Indisponível" : "🛒 Adicionar"}
+                </button>
+            </div>
+        `;
+        const img = card.querySelector("img");
+        img.onerror = () => { img.src = "https://picsum.photos/400/300?random"; };
+        container.appendChild(card);
+    });
+}
+
+/* ================================================================
+   11. FAVORITOS (localStorage)
+================================================================ */
+function toggleFavorito(id) {
+    id = String(id);
+    if (favoritos.includes(id)) {
+        favoritos = favoritos.filter(f=>f!==id);
+        showToast("Removido dos favoritos.", "info");
+    } else {
+        favoritos.push(id);
+        showToast("Adicionado aos favoritos! ❤️");
+    }
+    localStorage.setItem(LOCAL_STORAGE_KEYS.favoritos, JSON.stringify(favoritos));
+    document.getElementById("favCount").textContent = favoritos.length;
+    aplicarFiltros();
+    if (!document.getElementById("favsView").classList.contains("hidden")) renderFavoritosView();
+}
+
+function renderFavoritosView() {
+    const container = document.getElementById("favsContainer");
+    container.replaceChildren();
+    const favProds = produtos.filter(p => favoritos.includes(String(p.id)));
+
+    if (!favProds.length) {
+        container.innerHTML = `<div class="empty-state"><div class="icon">❤️</div><p>Sua lista de favoritos está vazia.</p></div>`;
+        return;
+    }
+    favProds.forEach(p => {
+        const card = document.createElement("article");
+        card.className = "produto";
+        const sem = Number(p.estoque||0) <= 0;
+        card.innerHTML = `
+            <div class="img-container" onclick="openDetail('${p.id}')">
+                <img src="${escapeHTML(imgUrl(p.imagem))}">
+                <button class="favorite active" onclick="event.stopPropagation();toggleFavorito('${p.id}')">❤️</button>
+            </div>
+            <div class="produto-info">
+                <h4>${escapeHTML(p.nome)}</h4>
+                <div class="preco">${fmt(p.preco)}</div>
+                <button class="add-cart" ${sem?"disabled":""} onclick="addCarrinho('${p.id}')">${sem?"Indisponível":"🛒 Adicionar"}</button>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+}
+
+/* ================================================================
+   12. MODAL DE DETALHES + PERGUNTAS
+================================================================ */
+function openDetail(id) {
+    produtoAtualId = String(id);
+    const p = produtos.find(x => String(x.id) === produtoAtualId);
+    if (!p) return;
+
+    document.getElementById("detailTitle").textContent    = p.nome;
+    document.getElementById("detailImg").src              = imgUrl(p.imagem);
+    document.getElementById("detailRating").textContent   = `⭐ ${Number(p.avaliacao||5).toFixed(1)} (${p.avaliacoes_count||0} avaliações)`;
+    document.getElementById("detailDesc").textContent     = p.descricao || "Sem descrição.";
+    document.getElementById("detailStock").textContent    = `Estoque: ${p.estoque||0} unidades`;
+    document.getElementById("detailPrice").textContent    = fmt(p.preco);
+    document.getElementById("detailParcelas").textContent = `ou 12x de ${fmt(p.preco / 12 * 1.05)} no cartão`;
+
+    const sem = Number(p.estoque||0) <= 0;
+    const btn = document.getElementById("detailAddBtn");
+    btn.disabled   = sem;
+    btn.textContent = sem ? "Indisponível no Estoque" : "🛒 Adicionar ao Carrinho";
+    btn.onclick    = () => { addCarrinho(p.id); closeDetail(); };
+
+    renderPerguntas(p);
+    openModal("detailModal");
+}
+
+function renderPerguntas(produto) {
+    const container = document.getElementById("questionsContainer");
+    container.replaceChildren();
+    const lista = Array.isArray(produto.perguntas) ? produto.perguntas : [];
+
+    if (!lista.length) {
+        container.innerHTML = `<p style="color:var(--text-muted);font-size:13px">Nenhuma pergunta ainda. Seja o primeiro!</p>`;
+        return;
+    }
+    lista.forEach(q => {
+        const div = document.createElement("div");
+        div.className = "question-item";
+        div.innerHTML = `💬 ${escapeHTML(q)}`;
+        container.appendChild(div);
+    });
+}
+
+async function enviarPergunta() {
+    if (!produtoAtualId) return;
+    const input = document.getElementById("questionInput");
+    const texto = input.value.trim();
+    if (!texto) return showToast("Digite a pergunta.", "danger");
+
+    const p = produtos.find(x => String(x.id) === produtoAtualId);
+    if (!p) return;
+
+    const perguntas = Array.isArray(p.perguntas) ? [...p.perguntas, texto] : [texto];
+
+    const { error } = await sb.from("produtos").update({ perguntas }).eq("id", p.id);
+    if (error) { showToast("Erro ao enviar pergunta.", "danger"); return; }
+
+    p.perguntas = perguntas;
+    renderPerguntas(p);
+    input.value = "";
+    showToast("Pergunta enviada ao vendedor! ❓");
+}
+
+/* ================================================================
+   13. CARRINHO (localStorage)
+================================================================ */
+function addCarrinho(id) {
+    id = String(id);
+    const p = produtos.find(x => String(x.id) === id);
+    if (!p || Number(p.estoque||0) <= 0) return showToast("Produto indisponível.", "danger");
+
+    const item = carrinho.find(c => c.id === id);
+    if (item) {
+        if (item.quantidade >= Number(p.estoque)) return showToast("Limite de estoque atingido.", "info");
+        item.quantidade++;
+    } else {
+        carrinho.push({ id, quantidade:1 });
+    }
+    salvarCarrinho();
+    showToast(`"${p.nome}" adicionado! 🛒`);
+}
+
+function alterarQtd(id, delta) {
+    const item = carrinho.find(c => c.id === String(id));
+    if (!item) return;
+    const p = produtos.find(x => String(x.id) === String(id));
+    if (delta > 0 && p && item.quantidade >= Number(p.estoque)) {
+        return showToast("Estoque máximo.", "info");
+    }
+    item.quantidade += delta;
+    if (item.quantidade <= 0) carrinho = carrinho.filter(c => c.id !== String(id));
+    salvarCarrinho();
+}
+
+function esvaziarCarrinho() {
+    if (!carrinho.length) return showToast("Carrinho já está vazio.", "info");
+    if (!confirm("Esvaziar o carrinho?")) return;
+    carrinho = [];
+    freteSelecionado = { valor:0, tipo:"", prazo:"", localidade:"" };
+    salvarCarrinho();
+}
+
+function salvarCarrinho() {
+    localStorage.setItem(LOCAL_STORAGE_KEYS.carrinho, JSON.stringify(carrinho));
+    atualizarCarrinho();
+}
+
+function obterResumo() {
+    let subtotal = 0, qtdTotal = 0;
+    const itens = [];
+    carrinho.forEach(c => {
+        const p = produtos.find(x => String(x.id) === c.id);
+        if (!p) return;
+        const sub = p.preco * c.quantidade;
+        subtotal += sub; qtdTotal += c.quantidade;
+        itens.push({ produto:p, quantidade:c.quantidade, subtotal:sub });
+    });
+    return { itens, subtotal, qtdTotal };
+}
+
+function atualizarCarrinho() {
+    const resumo = obterResumo();
+    document.getElementById("cartCount").textContent = resumo.qtdTotal;
+    const cartItems = document.getElementById("cartItems");
+    cartItems.replaceChildren();
+
+    if (!resumo.itens.length) {
+        cartItems.innerHTML = `<div class="empty-state" style="padding:30px 0"><div class="icon">🛒</div><p>Carrinho vazio.</p></div>`;
+    } else {
+        resumo.itens.forEach(item => {
+            const p = item.produto;
+            const div = document.createElement("div");
+            div.className = "cart-item";
+            div.innerHTML = `
+                <img src="${escapeHTML(imgUrl(p.imagem))}" class="cart-item-img">
+                <div>
+                    <strong>${escapeHTML(p.nome)}</strong><br>
+                    <small style="color:var(--text-muted)">${fmt(p.preco)} un.</small>
+                    <div class="quantity-control">
+                        <button class="quantity-btn" onclick="alterarQtd('${p.id}',-1)">-</button>
+                        <span class="quantity-value">${item.quantidade}</span>
+                        <button class="quantity-btn" onclick="alterarQtd('${p.id}',1)">+</button>
+                    </div>
+                </div>
+                <div style="text-align:right">
+                    <strong>${fmt(item.subtotal)}</strong><br>
+                    <button style="border:0;background:transparent;color:var(--danger);font-size:12px;cursor:pointer;margin-top:6px" onclick="alterarQtd('${p.id}',-9999)">🗑️</button>
+                </div>
+            `;
+            cartItems.appendChild(div);
+        });
+    }
+
+    const desc  = resumo.subtotal * descontoCupom;
+    const frete = Number(freteSelecionado.valor)||0;
+    const total = Math.max(0, resumo.subtotal - desc + frete);
+
+    document.getElementById("cartSubtotal").textContent = fmt(resumo.subtotal);
+    const drEl = document.getElementById("discountRow");
+    if (descontoCupom > 0 && resumo.subtotal > 0) {
+        drEl.classList.remove("hidden");
+        document.getElementById("cartDiscount").textContent = `-${fmt(desc)}`;
+    } else { drEl.classList.add("hidden"); }
+
+    const freteLabel = freteSelecionado.tipo
+        ? (frete===0 ? `GRÁTIS (${freteSelecionado.tipo})` : `${fmt(frete)} (${freteSelecionado.tipo})`)
+        : fmt(0);
+    document.getElementById("cartFreteVal").textContent = freteLabel;
+    document.getElementById("cartTotal").textContent = fmt(total);
+}
+
+function aplicarCupom() {
+    const v = (document.getElementById("couponInput").value||"").trim().toUpperCase();
+    if (v === "PRIMEIRA10") {
+        descontoCupom = 0.10;
+        showToast("Cupom PRIMEIRA10 aplicado! (10% OFF) 🎉");
+    } else {
+        descontoCupom = 0;
+        showToast("Cupom inválido ou expirado.", "danger");
+    }
+    atualizarCarrinho();
+}
+
+/* ================================================================
+   14. PAGAMENTO
+================================================================ */
+function setPayment(m) {
+    metodoPagamento = m;
+    document.getElementById("btnPayPix").classList.toggle("active", m==="pix");
+    document.getElementById("btnPayCard").classList.toggle("active", m==="card");
+    document.getElementById("pixDetails").classList.toggle("hidden", m!=="pix");
+    document.getElementById("cardDetails").classList.toggle("hidden", m!=="card");
+}
+
+function copiarPix() {
+    const v = document.getElementById("pixKeyInput").value;
+    navigator.clipboard.writeText(v).then(()=>showToast("Chave Pix copiada! 📋")).catch(()=>{});
+}
+
+/* ================================================================
+   15. FRETE VIACEP
+================================================================ */
+function mascaraCEP(input) {
+    let v = input.value.replace(/\D/g,"").substring(0,8);
+    if (v.length > 5) v = v.substring(0,5)+"-"+v.substring(5);
+    input.value = v;
+}
+
+async function calcularFrete() {
+    const cep = document.getElementById("cepInput").value.replace(/\D/g,"");
+    const resultado = document.getElementById("freteResultado");
+    const resumo    = obterResumo();
+
+    if (cep.length !== 8) return showToast("CEP deve ter 8 dígitos.", "danger");
+    if (!resumo.itens.length) return showToast("Adicione produtos ao carrinho.", "info");
+
+    resultado.innerHTML = `<span style="color:var(--text-muted)">🔄 Consultando...</span>`;
+    try {
+        const resp = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+        const data = await resp.json();
+        if (data.erro) { resultado.innerHTML = `<span style="color:var(--danger)">❌ CEP não encontrado.</span>`; return; }
+
+        const loc  = `${data.localidade} - ${data.uf}`;
+        const pac  = resumo.subtotal >= 350 ? 0 : 15.90;
+        const sdx  = resumo.subtotal >= 350 ? 12 : 28.50;
+
+        resultado.innerHTML = `
+            <div style="margin-bottom:8px;color:var(--success);font-weight:700">📍 ${escapeHTML(loc)}</div>
+            <div class="frete-opcao selected" id="fOpcPac">
+                <div><strong>PAC</strong> <small>(${pac===0?"Grátis":"5-8 dias"})</small></div>
+                <strong>${pac===0?"GRÁTIS":fmt(pac)}</strong>
+            </div>
+            <div class="frete-opcao" id="fOpcSdx">
+                <div><strong>SEDEX</strong> <small>(1-3 dias)</small></div>
+                <strong>${fmt(sdx)}</strong>
+            </div>
+        `;
+        const selFrete = (val,tipo,prazo,el1,el2) => {
+            freteSelecionado = { valor:val, tipo, prazo, localidade:loc };
+            el1.classList.add("selected"); el2.classList.remove("selected");
+            atualizarCarrinho();
+        };
+        document.getElementById("fOpcPac").onclick = () => selFrete(pac,"PAC","5-8 dias",document.getElementById("fOpcPac"),document.getElementById("fOpcSdx"));
+        document.getElementById("fOpcSdx").onclick = () => selFrete(sdx,"SEDEX","1-3 dias",document.getElementById("fOpcSdx"),document.getElementById("fOpcPac"));
+        selFrete(pac,"PAC","5-8 dias",document.getElementById("fOpcPac"),document.getElementById("fOpcSdx"));
+    } catch {
+        resultado.innerHTML = `<span style="color:var(--danger)">❌ Erro ao consultar CEP.</span>`;
+    }
+}
+
+/* ================================================================
+   16. FINALIZAR PEDIDO (SUPABASE)
+================================================================ */
+async function enviarWhatsApp() {
+    const resumo = obterResumo();
+    if (!resumo.itens.length) return showToast("Carrinho vazio.", "danger");
+    if (metodoPagamento==="card") {
+        const nc = document.getElementById("cardNum")?.value.trim();
+        if (!nc || nc.replace(/\D/g,"").length < 12) return showToast("Preencha os dados do cartão.", "danger");
+    }
+
+    const numVend = localStorage.getItem(LOCAL_STORAGE_KEYS.whatsapp) || "5500000000000";
+    const pagLabel = metodoPagamento==="pix" ? "⚡ Pix" : "💳 Cartão de Crédito";
+    const desc   = resumo.subtotal * descontoCupom;
+    const frete  = Number(freteSelecionado.valor)||0;
+    const total  = Math.max(0, resumo.subtotal - desc + frete);
+
+    let msg = "Olá! Quero finalizar o pedido:\n\n";
+    resumo.itens.forEach(i => {
+        msg += `🛍️ *${i.produto.nome}* (x${i.quantidade}) — ${fmt(i.subtotal)}\n`;
+    });
+    if (desc>0) msg += `\n🏷️ *Desconto:* -${fmt(desc)}`;
+    if (freteSelecionado.tipo) msg += `\n🚚 *Frete (${freteSelecionado.tipo}):* ${frete===0?"GRÁTIS":fmt(frete)}\n📍 *Para:* ${freteSelecionado.localidade}`;
+    msg += `\n\n💳 *Pagamento:* ${pagLabel}`;
+    msg += `\n💰 *TOTAL: ${fmt(total)}*`;
+
+    // Persistir pedido no Supabase (apenas se logado)
+    if (currentUser) {
+        const itensJSON = resumo.itens.map(i => ({
+            produto_id: i.produto.id,
+            nome: i.produto.nome,
+            preco: i.produto.preco,
+            quantidade: i.quantidade,
+            subtotal: i.subtotal
+        }));
+
+        // Descobrir vendedor_id pelo primeiro produto do carrinho
+        const vendedorId = resumo.itens[0]?.produto.vendedor_id ?? null;
+
+        await sb.from("pedidos").insert({
+            comprador_id:   currentUser.id,
+            vendedor_id:    vendedorId,
+            itens:          itensJSON,
+            subtotal:       resumo.subtotal,
+            desconto:       desc,
+            frete:          frete,
+            total:          total,
+            forma_pagamento: metodoPagamento,
+            cep_destino:    freteSelecionado.localidade ? document.getElementById("cepInput").value : null,
+            localidade:     freteSelecionado.localidade || null,
+            status:         "Em Separação"
+        });
+
+        // Abater estoque no Supabase
+        for (const item of resumo.itens) {
+            const novoEstoque = Math.max(0, Number(item.produto.estoque) - item.quantidade);
+            await sb.from("produtos").update({ estoque: novoEstoque }).eq("id", item.produto.id);
+        }
+    }
+
+    carrinho = [];
+    salvarCarrinho();
+    descontoCupom = 0;
+    freteSelecionado = { valor:0, tipo:"", prazo:"", localidade:"" };
+    closeCart();
+    await carregarProdutos();
+
+    window.open(`https://wa.me/${numVend}?text=${encodeURIComponent(msg)}`, "_blank");
+    showToast("Pedido enviado! Aguarde retorno do vendedor. ✅");
+}
+
+/* ================================================================
+   17. MINHAS COMPRAS (SUPABASE)
+================================================================ */
+async function carregarMinhasCompras() {
+    const container = document.getElementById("minhasComprasContainer");
+    container.innerHTML = `<div class="empty-state"><div class="icon">⏳</div><p>Carregando...</p></div>`;
+
+    if (!currentUser) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="icon">🔑</div>
+                <h3>Faça login para ver suas compras</h3>
+                <p style="margin-top:8px"><button class="btn-primary" style="width:auto;padding:10px 24px" onclick="switchAuthTab('login');openModal('authModal')">Entrar agora</button></p>
+            </div>
+        `;
+        return;
+    }
+
+    const { data, error } = await sb
+        .from("pedidos")
+        .select("*")
+        .eq("comprador_id", currentUser.id)
+        .order("created_at", { ascending: false });
+
+    meusPedidos = data || [];
+    container.replaceChildren();
+
+    if (!meusPedidos.length) {
+        container.innerHTML = `<div class="empty-state"><div class="icon">📦</div><p>Você ainda não realizou nenhum pedido.</p></div>`;
+        return;
+    }
+
+    meusPedidos.forEach(p => {
+        const div = document.createElement("div");
+        div.className = "pedido-card";
+        const dt  = new Date(p.created_at).toLocaleString("pt-BR");
+        const itens = Array.isArray(p.itens) ? p.itens : [];
+        const itensTexto = itens.map(i=>`${i.nome} (x${i.quantidade})`).join(", ");
+        div.innerHTML = `
+            <div class="pedido-header">
+                <div>
+                    <strong>Pedido #${p.id.substring(0,8)}...</strong>
+                    <div style="font-size:12px;color:var(--text-muted)">${dt}</div>
+                </div>
+                <span class="status-badge status-${p.status}">${p.status} 📦</span>
+            </div>
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:8px">${escapeHTML(itensTexto)}</p>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:13px;color:var(--text-muted)">${p.forma_pagamento==="pix"?"⚡ Pix":"💳 Cartão"}</span>
+                <strong style="font-size:18px;color:var(--primary)">${fmt(p.total)}</strong>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+/* ================================================================
+   18. PAINEL DO VENDEDOR (SUPABASE)
+================================================================ */
+async function carregarDadosAdmin() {
+    if (!currentUser || currentProfile?.role !== "vendedor") return;
+    loading(true);
+    await Promise.all([carregarMeusProdutos(), carregarMinhasVendas(), atualizarDashboard()]);
+    carregarConfigWhatsApp();
+    loading(false);
+}
+
+async function carregarMeusProdutos() {
+    const { data, error } = await sb
+        .from("produtos")
+        .select("*")
+        .eq("vendedor_id", currentUser.id)
+        .order("created_at", { ascending: false });
+    meusProdutos = data || [];
+    renderAdminTable();
+}
+
+async function carregarMinhasVendas() {
+    const { data } = await sb
+        .from("pedidos")
+        .select("*")
+        .eq("vendedor_id", currentUser.id)
+        .order("created_at", { ascending: false });
+    minhasVendas = data || [];
+    renderVendas();
+}
+
+async function atualizarDashboard() {
+    if (!currentUser) return;
+    const { data } = await sb.rpc("buscar_dashboard_vendedor", { p_vendedor_id: currentUser.id });
+    if (data && data[0]) {
+        const d = data[0];
+        document.getElementById("dashReceita").textContent  = fmt(d.total_receita||0);
+        document.getElementById("dashPedidos").textContent  = d.total_pedidos||0;
+        document.getElementById("dashCritico").textContent  = d.estoque_critico||0;
+        document.getElementById("dashProdutos").textContent = d.total_produtos||0;
+    }
+}
+
+function renderAdminTable() {
+    const tbody = document.getElementById("adminTableBody");
+    tbody.replaceChildren();
+    if (!meusProdutos.length) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-muted)">Nenhum produto cadastrado ainda.</td></tr>`;
+        return;
+    }
+    meusProdutos.forEach(p => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td><img class="table-img" src="${escapeHTML(imgUrl(p.imagem))}"></td>
+            <td>
+                <strong>${escapeHTML(p.nome)}</strong><br>
+                <small style="color:var(--text-muted)">⭐ ${Number(p.avaliacao||5).toFixed(1)} (${p.avaliacoes_count||0})</small>
+            </td>
+            <td><strong>${p.estoque||0}</strong> un.</td>
+            <td><strong>${fmt(p.preco)}</strong></td>
+            <td>
+                <button class="btn-action" style="background:var(--info)" onclick="editarProduto('${p.id}')">✏️</button>
+                <button class="btn-action" style="background:var(--danger)" onclick="deletarProduto('${p.id}')">🗑️</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function renderVendas() {
+    const container = document.getElementById("vendasContainer");
+    container.replaceChildren();
+    if (!minhasVendas.length) {
+        container.innerHTML = `<p style="color:var(--text-muted);padding:10px 0">Nenhuma venda recebida ainda.</p>`;
+        return;
+    }
+    minhasVendas.forEach(v => {
+        const div = document.createElement("div");
+        div.style.cssText = "background:var(--bg);padding:12px;border-radius:12px;margin-bottom:10px;border:1px solid var(--border)";
+        const dt = new Date(v.created_at).toLocaleString("pt-BR");
+        div.innerHTML = `
+            <div style="display:flex;justify-content:space-between;font-size:13px">
+                <strong>Venda #${v.id.substring(0,8)}...</strong>
+                <span>${dt}</span>
+            </div>
+            <div style="font-size:13px;margin-top:4px;color:var(--text-muted)">Pagamento: <strong>${v.forma_pagamento==="pix"?"⚡ Pix":"💳 Cartão"}</strong></div>
+            <div style="font-size:16px;font-weight:800;color:var(--success);margin-top:6px">${fmt(v.total)}</div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+/* ================================================================
+   19. CRUD DE PRODUTOS (SUPABASE)
+================================================================ */
+function toggleNovaCat() {
+    const sel = document.getElementById("pCategoria");
+    document.getElementById("novaCatGroup").classList.toggle("hidden", sel.value !== "__NOVA__");
+}
+
+function calcDesconto() {
+    const p = parseFloat(document.getElementById("pPreco").value)||0;
+    const a = parseFloat(document.getElementById("pAntigo").value)||0;
+    document.getElementById("pDesconto").value = (a>p&&p>0) ? Math.round(((a-p)/a)*100) : 0;
+}
+
+function previewImg() {
+    const url = document.getElementById("pImagem").value.trim();
+    const box = document.getElementById("imgPreviewBox");
+    box.innerHTML = (url&&urlSegura(url))
+        ? `<img src="${url}" onerror="this.parentElement.innerHTML='<span>URL inválida</span>'">`
+        : "<span>Preview da imagem</span>";
+}
+
+function processarImagemLocal(e) {
+    const file = e.target.files[0];
+    if (!file || !file.type.startsWith("image/")) return showToast("Selecione uma imagem válida.", "danger");
+    const reader = new FileReader();
+    reader.onload = evt => {
+        document.getElementById("pImagem").value = evt.target.result;
+        previewImg();
+        showToast("Imagem carregada! 📷");
+    };
+    reader.readAsDataURL(file);
+}
+
+async function handleSaveProduct(e) {
+    e.preventDefault();
+    if (!currentUser || currentProfile?.role !== "vendedor") {
+        return showToast("Apenas vendedores podem cadastrar produtos.", "danger");
+    }
+
+    const id     = document.getElementById("editProductId").value;
+    let cat      = document.getElementById("pCategoria").value;
+    if (cat === "__NOVA__") cat = document.getElementById("pNovaCategoria").value.trim() || "Geral";
+
+    const payload = {
+        nome:             document.getElementById("pNome").value.trim(),
+        categoria:        cat,
+        preco:            parseFloat(document.getElementById("pPreco").value)||0,
+        preco_antigo:     parseFloat(document.getElementById("pAntigo").value)||null,
+        estoque:          parseInt(document.getElementById("pEstoque").value)||0,
+        avaliacao:        parseFloat(document.getElementById("pAvaliacao").value)||5,
+        avaliacoes_count: parseInt(document.getElementById("pAvaliacoesCount").value)||0,
+        descricao:        document.getElementById("pDescricao").value.trim(),
+        imagem:           document.getElementById("pImagem").value.trim(),
+        desconto:         parseInt(document.getElementById("pDesconto").value)||0,
+    };
+
+    loading(true);
+    let error;
+    if (id) {
+        ({ error } = await sb.from("produtos").update(payload).eq("id", id).eq("vendedor_id", currentUser.id));
+        if (!error) showToast(`"${payload.nome}" atualizado!`);
+    } else {
+        ({ error } = await sb.from("produtos").insert({ ...payload, vendedor_id: currentUser.id }));
+        if (!error) showToast(`"${payload.nome}" cadastrado! 🎉`);
+    }
+    loading(false);
+
+    if (error) { showToast("Erro ao salvar: " + error.message, "danger"); return; }
+
+    resetForm();
+    await Promise.all([carregarProdutos(), carregarMeusProdutos(), atualizarDashboard()]);
+}
+
+function editarProduto(id) {
+    const p = meusProdutos.find(x => String(x.id) === String(id));
+    if (!p) return;
+
+    document.getElementById("editProductId").value    = p.id;
+    document.getElementById("pNome").value            = p.nome;
+    document.getElementById("pPreco").value           = p.preco;
+    document.getElementById("pAntigo").value          = p.preco_antigo||"";
+    document.getElementById("pEstoque").value         = p.estoque||0;
+    document.getElementById("pAvaliacao").value       = p.avaliacao||5;
+    document.getElementById("pAvaliacoesCount").value = p.avaliacoes_count||0;
+    document.getElementById("pDescricao").value       = p.descricao||"";
+    document.getElementById("pImagem").value          = p.imagem||"";
+    previewImg();
+
+    renderSelectCategorias();
+    const sel = document.getElementById("pCategoria");
+    for (let i=0; i<sel.options.length; i++) {
+        if (sel.options[i].value === p.categoria) { sel.selectedIndex = i; break; }
+    }
+
+    document.getElementById("formCardTitle").textContent = "✏️ Editar Produto";
+    document.getElementById("btnSubmitForm").textContent  = "💾 Salvar Alterações";
+    document.getElementById("btnCancelEdit").classList.remove("hidden");
+    window.scrollTo({ top:0, behavior:"smooth" });
+}
+
+async function deletarProduto(id) {
+    const p = meusProdutos.find(x => String(x.id) === String(id));
+    if (!p || !confirm(`Excluir "${p.nome}"?`)) return;
+
+    loading(true);
+    const { error } = await sb.from("produtos").delete().eq("id", id).eq("vendedor_id", currentUser.id);
+    loading(false);
+
+    if (error) { showToast("Erro ao excluir.", "danger"); return; }
+    showToast(`"${p.nome}" removido.`, "info");
+
+    // Limpar do carrinho e favoritos locais
+    carrinho  = carrinho.filter(c => c.id !== String(id));
+    favoritos = favoritos.filter(f => f !== String(id));
+    salvarCarrinho();
+    localStorage.setItem(LOCAL_STORAGE_KEYS.favoritos, JSON.stringify(favoritos));
+
+    await Promise.all([carregarProdutos(), carregarMeusProdutos(), atualizarDashboard()]);
+}
+
+function resetForm() {
+    document.getElementById("productForm").reset();
+    document.getElementById("editProductId").value   = "";
+    document.getElementById("formCardTitle").textContent = "➕ Cadastrar Produto";
+    document.getElementById("btnSubmitForm").textContent = "➕ Cadastrar Produto";
+    document.getElementById("btnCancelEdit").classList.add("hidden");
+    document.getElementById("novaCatGroup").classList.add("hidden");
+    document.getElementById("pAvaliacao").value       = 4.8;
+    document.getElementById("pAvaliacoesCount").value = 45;
+    document.getElementById("pEstoque").value         = 10;
+    const fi = document.getElementById("pImgFile"); if (fi) fi.value = "";
+    previewImg();
+}
+
+/* ================================================================
+   20. WHATSAPP & BANNER & CSV
+================================================================ */
+function mascaraTelefone(input) {
+    let v = input.value.replace(/\D/g,"").substring(0,11);
+    if (v.length>10) v = v.replace(/^(\d{2})(\d{5})(\d{4})/,"($1) $2-$3");
+    else if (v.length>6) v = v.replace(/^(\d{2})(\d{4})(\d{0,4})/,"($1) $2-$3");
+    input.value = v;
+}
+
+function carregarConfigWhatsApp() {
+    const salvo  = localStorage.getItem(LOCAL_STORAGE_KEYS.whatsapp);
+    const notice = document.getElementById("wspNotice");
+    const input  = document.getElementById("wspSellerNumber");
+    if (salvo) {
+        if (input) input.value = salvo;
+        if (notice) { notice.textContent = `✅ WhatsApp ativo: +${salvo}`; notice.style.color = "var(--success)"; }
+    } else {
+        if (notice) { notice.textContent = "⚠️ Nenhum número salvo. Usando número padrão."; notice.style.color = "var(--warning)"; }
+    }
+}
+
+async function salvarWhatsApp() {
+    const v = document.getElementById("wspSellerNumber").value.replace(/\D/g,"");
+    if (v.length < 10) return showToast("Número inválido. Informe DDD + número.", "danger");
+    const numero = v.startsWith("55") ? v : "55"+v;
+    localStorage.setItem(LOCAL_STORAGE_KEYS.whatsapp, numero);
+    // Persistir no perfil Supabase também
+    if (currentUser) {
+        await sb.from("profiles").update({ whatsapp: numero }).eq("id", currentUser.id);
+    }
+    carregarConfigWhatsApp();
+    showToast("WhatsApp salvo! 📱");
+}
+
+function removerWhatsApp() {
+    localStorage.removeItem(LOCAL_STORAGE_KEYS.whatsapp);
+    const input = document.getElementById("wspSellerNumber"); if (input) input.value = "";
+    carregarConfigWhatsApp();
+    showToast("Número removido. Usando padrão.", "info");
+}
+
+function exportarCSV() {
+    if (!meusProdutos.length) return showToast("Nenhum produto para exportar.", "info");
+    let csv = "ID,Nome,Categoria,Preco,Estoque,Avaliacao,Desconto\n";
+    meusProdutos.forEach(p => {
+        const n = `"${(p.nome||"").replace(/"/g,'""')}"`;
+        const c = `"${(p.categoria||"").replace(/"/g,'""')}"`;
+        csv += `${p.id},${n},${c},${p.preco},${p.estoque||0},${p.avaliacao||5},${p.desconto||0}\n`;
+    });
+    const blob = new Blob(["\uFEFF"+csv], { type:"text/csv;charset=utf-8;" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `relatorio_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    showToast("CSV exportado! 📊");
+}
+
+function openBannerConfig() {
+    const atual = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEYS.banner)||"{}");
+    const titulo = prompt("Título do Banner:", atual.titulo || "🔥 Grandes Ofertas do Dia");
+    if (titulo===null) return;
+    const desc = prompt("Descrição:", atual.descricao || "Use o cupom PRIMEIRA10 para 10% de desconto!");
+    if (desc===null) return;
+    const banner = { titulo: titulo||"🔥 Grandes Ofertas", descricao: desc||"" };
+    localStorage.setItem(LOCAL_STORAGE_KEYS.banner, JSON.stringify(banner));
+    document.getElementById("bannerTitle").textContent = banner.titulo;
+    document.getElementById("bannerDesc").textContent  = banner.descricao;
+    showToast("Banner atualizado! ✏️");
+}
+
+/* ================================================================
+   21. DARK MODE
+================================================================ */
+document.getElementById("themeBtn").onclick = () => {
+    const dark = document.body.classList.toggle("dark");
+    localStorage.setItem(LOCAL_STORAGE_KEYS.tema, dark?"dark":"light");
+    document.getElementById("themeBtn").textContent = dark ? "☀️" : "🌙";
+};
+if (localStorage.getItem(LOCAL_STORAGE_KEYS.tema) === "dark") {
+    document.body.classList.add("dark");
+    document.getElementById("themeBtn").textContent = "☀️";
+}
+
+/* ================================================================
+   22. EVENT LISTENERS GLOBAIS
+================================================================ */
+document.getElementById("cartBtn").onclick = () => { atualizarCarrinho(); openModal("cartModal"); };
+
+// Fechar modais clicando no backdrop
+["cartModal","detailModal","authModal","upgradeModal"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener("click", e => { if(e.target===el) closeModal(id); });
+});
+
+// Fechar com ESC
+document.addEventListener("keydown", e => {
+    if (e.key === "Escape") {
+        ["cartModal","detailModal","authModal","upgradeModal"].forEach(id => closeModal(id));
+    }
+});
+
+/* ================================================================
+   23. INICIALIZAÇÃO
+================================================================ */
+function init() {
+    // Carregar banner salvo
+    const banner = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEYS.banner)||"{}");
+    if (banner.titulo) document.getElementById("bannerTitle").textContent = banner.titulo;
+    if (banner.descricao) document.getElementById("bannerDesc").textContent = banner.descricao;
+
+    document.getElementById("favCount").textContent = favoritos.length;
+    atualizarCarrinho();
+
+    // A autenticação e carregamento de produtos são disparados pelo onAuthStateChange
+}
+
+init();
+
+// ================================================================
+// REGISTRO DO SERVICE WORKER (PWA)
+// ================================================================
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("sw.js")
+            .then(reg => console.log("✅ Service Worker registrado:", reg.scope))
+            .catch(err => console.warn("⚠️ SW não registrado:", err));
+    });
+}
+</script>
+</body>
+</html>
