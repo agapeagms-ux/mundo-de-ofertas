@@ -294,15 +294,237 @@ textarea.form-control { resize:vertical; min-height:70px; }
 .empty-state { grid-column:1/-1; text-align:center; padding:50px 10px; color:var(--text-muted); }
 .empty-state .icon { font-size:48px; margin-bottom:12px; }
 
-/* RESPONSIVE */
-@media(max-width:900px) { .admin-layout{grid-template-columns:1fr} }
-@media(max-width:700px) {
-    .top-bar{flex-wrap:wrap}
-    .logo{width:100%;text-align:center}
-    .nav-tabs{flex:1;width:100%;justify-content:center}
-    .nav-tab-btn{padding:7px 7px;font-size:11px}
-    .produtos{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-    .form-row{grid-template-columns:1fr}
+/* BOTTOM APP NAVIGATION (MOBILE) */
+.mobile-bottom-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    z-index: 1400;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 -4px 15px rgba(0,0,0,.08);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    flex: 1;
+    height: 100%;
+    position: relative;
+    transition: .2s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.bottom-nav-item.active {
+    color: var(--primary);
+}
+
+.dark .bottom-nav-item.active {
+    color: #60a5fa;
+}
+
+.bottom-nav-icon {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.bottom-nav-badge {
+    position: absolute;
+    top: 6px;
+    right: calc(50% - 18px);
+    min-width: 17px;
+    height: 17px;
+    padding: 0 4px;
+    background: var(--danger);
+    color: white;
+    font-size: 10px;
+    font-weight: 800;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* RESPONSIVE & MOBILE POLISH */
+@media(max-width: 900px) {
+    .admin-layout { grid-template-columns: 1fr; }
+}
+
+@media(max-width: 768px) {
+    body {
+        padding-bottom: 95px; /* Espaço para a barra inferior fixa */
+    }
+
+    /* Header Compacto estilo App */
+    header {
+        padding: 10px 14px;
+    }
+    .top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+    .logo {
+        font-size: 17px;
+    }
+
+    /* No celular escondemos as abas superiores e usamos o Bottom Nav nativo */
+    .nav-tabs {
+        display: none !important;
+    }
+
+    /* Barra inferior ativa no mobile */
+    .mobile-bottom-nav {
+        display: flex;
+    }
+
+    .search-container {
+        margin: 8px auto 0;
+    }
+    .search input {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
+
+    /* Reposiciona o FAB flutuante para não cobrir o Bottom Nav */
+    .seller-fab {
+        bottom: 74px;
+        right: 14px;
+        padding: 11px 16px;
+        font-size: 12px;
+        border-radius: 24px;
+        box-shadow: 0 6px 18px rgba(0,0,0,.28);
+    }
+
+    /* Grade de produtos 2 por linha super otimizada */
+    .produtos {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .produto {
+        border-radius: 16px;
+    }
+
+    .img-container {
+        height: 140px;
+    }
+
+    .produto-info {
+        padding: 10px;
+    }
+
+    .produto-info h4 {
+        font-size: 13px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        height: 34px;
+        margin-bottom: 2px;
+    }
+
+    .product-rating {
+        font-size: 11px;
+    }
+
+    .preco {
+        font-size: 16px;
+    }
+
+    .preco-antigo {
+        font-size: 11px;
+    }
+
+    .add-cart {
+        padding: 9px;
+        font-size: 12px;
+        border-radius: 10px;
+        margin-top: 6px;
+    }
+
+    /* Banner Mobile */
+    .banner {
+        margin: 10px 0 16px;
+        padding: 18px 16px;
+        border-radius: 18px;
+    }
+    .banner h2 {
+        font-size: 20px;
+    }
+    .banner p {
+        font-size: 13px;
+    }
+    .banner button {
+        margin-top: 10px;
+        padding: 9px 16px;
+        font-size: 13px;
+    }
+
+    /* Filtros e Categorias */
+    .filter-bar {
+        padding: 10px 12px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    .filter-controls {
+        justify-content: space-between;
+        width: 100%;
+    }
+    .filter-group input, .filter-group select {
+        padding: 6px 8px;
+        font-size: 12px;
+    }
+
+    .categoria {
+        min-width: 90px;
+        padding: 8px 12px;
+        font-size: 12px;
+        border-radius: 10px;
+    }
+
+    /* Modais Fullscreen no Mobile */
+    .modal {
+        padding: 0;
+        align-items: flex-end;
+    }
+    .modal-content {
+        max-width: 100%;
+        max-height: 88vh;
+        border-radius: 24px 24px 0 0;
+        padding: 20px 16px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+
+    .toast-container {
+        bottom: 80px;
+        right: 12px;
+        left: 12px;
+    }
+    .toast {
+        min-width: 100%;
+    }
 }
 </style>
 </head>
@@ -504,6 +726,34 @@ textarea.form-control { resize:vertical; min-height:70px; }
 </section>
 
 </main>
+
+<!-- ===================================================
+     BARRA DE NAVEGAÇÃO INFERIOR NATIVA (MOBILE)
+=================================================== -->
+<nav class="mobile-bottom-nav">
+    <button class="bottom-nav-item active" id="bNavShop" onclick="switchView('shop')">
+        <span class="bottom-nav-icon">🛍️</span>
+        <span>Início</span>
+    </button>
+    <button class="bottom-nav-item" id="bNavFavs" onclick="switchView('favs')">
+        <span class="bottom-nav-icon">❤️</span>
+        <span>Favoritos</span>
+        <span class="bottom-nav-badge" id="favCountMobile">0</span>
+    </button>
+    <button class="bottom-nav-item" id="bNavCompras" onclick="switchView('compras')">
+        <span class="bottom-nav-icon">📦</span>
+        <span>Compras</span>
+    </button>
+    <button class="bottom-nav-item hidden" id="bNavAdmin" onclick="switchView('admin')">
+        <span class="bottom-nav-icon">⚙️</span>
+        <span>Painel</span>
+    </button>
+    <button class="bottom-nav-item" id="bNavCart" onclick="atualizarCarrinho(); openModal('cartModal')">
+        <span class="bottom-nav-icon">🛒</span>
+        <span>Carrinho</span>
+        <span class="bottom-nav-badge" id="cartCountMobile">0</span>
+    </button>
+</nav>
 
 <!-- ===================================================
      FAB INTELIGENTE
@@ -878,10 +1128,14 @@ function atualizarUI() {
 
         if (currentProfile.role === "vendedor") {
             btnAdmin.classList.remove("hidden");
+            const bNavAdmin = document.getElementById("bNavAdmin");
+            if (bNavAdmin) bNavAdmin.classList.remove("hidden");
             fab.className = "seller-fab mode-vendedor";
             fabLabel.textContent = "Painel de Vendas";
         } else {
             btnAdmin.classList.add("hidden");
+            const bNavAdmin = document.getElementById("bNavAdmin");
+            if (bNavAdmin) bNavAdmin.classList.add("hidden");
             fab.className = "seller-fab";
             fabLabel.textContent = "Tornar-se Vendedor";
         }
@@ -894,6 +1148,8 @@ function atualizarUI() {
         userArea.appendChild(btnEntrar);
 
         btnAdmin.classList.add("hidden");
+        const bNavAdmin = document.getElementById("bNavAdmin");
+        if (bNavAdmin) bNavAdmin.classList.add("hidden");
         fab.className = "seller-fab";
         fabLabel.textContent = "Tornar-se Vendedor";
     }
@@ -1014,12 +1270,16 @@ async function salvarUpgradeVendedor() {
 function switchView(view) {
     document.querySelectorAll(".page-view").forEach(v => v.classList.add("hidden"));
     document.querySelectorAll(".nav-tab-btn").forEach(b => b.classList.remove("active"));
+    document.querySelectorAll(".bottom-nav-item").forEach(b => b.classList.remove("active"));
 
     const vEl = document.getElementById(view + "View");
     if (vEl) vEl.classList.remove("hidden");
 
     const bEl = document.getElementById("btnView" + view.charAt(0).toUpperCase() + view.slice(1));
     if (bEl) bEl.classList.add("active");
+
+    const bNavEl = document.getElementById("bNav" + view.charAt(0).toUpperCase() + view.slice(1));
+    if (bNavEl) bNavEl.classList.add("active");
 
     const sw = document.getElementById("searchBarWrapper");
     if (sw) sw.style.display = view === "shop" ? "block" : "none";
@@ -1202,7 +1462,10 @@ function toggleFavorito(id) {
         showToast("Adicionado aos favoritos! ❤️");
     }
     localStorage.setItem(LOCAL_STORAGE_KEYS.favoritos, JSON.stringify(favoritos));
-    document.getElementById("favCount").textContent = favoritos.length;
+    const favCountEl = document.getElementById("favCount");
+    if (favCountEl) favCountEl.textContent = favoritos.length;
+    const favCountMob = document.getElementById("favCountMobile");
+    if (favCountMob) favCountMob.textContent = favoritos.length;
     aplicarFiltros();
     if (!document.getElementById("favsView").classList.contains("hidden")) renderFavoritosView();
 }
@@ -1357,7 +1620,11 @@ function obterResumo() {
 
 function atualizarCarrinho() {
     const resumo = obterResumo();
-    document.getElementById("cartCount").textContent = resumo.qtdTotal;
+    const cartCountEl = document.getElementById("cartCount");
+    if (cartCountEl) cartCountEl.textContent = resumo.qtdTotal;
+    const cartCountMob = document.getElementById("cartCountMobile");
+    if (cartCountMob) cartCountMob.textContent = resumo.qtdTotal;
+
     const cartItems = document.getElementById("cartItems");
     cartItems.replaceChildren();
 
@@ -1950,7 +2217,10 @@ function init() {
     if (banner.titulo) document.getElementById("bannerTitle").textContent = banner.titulo;
     if (banner.descricao) document.getElementById("bannerDesc").textContent = banner.descricao;
 
-    document.getElementById("favCount").textContent = favoritos.length;
+    const favCountEl = document.getElementById("favCount");
+    if (favCountEl) favCountEl.textContent = favoritos.length;
+    const favCountMob = document.getElementById("favCountMobile");
+    if (favCountMob) favCountMob.textContent = favoritos.length;
     atualizarCarrinho();
 
     // A autenticação e carregamento de produtos são disparados pelo onAuthStateChange
